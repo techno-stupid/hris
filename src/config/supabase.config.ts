@@ -6,18 +6,32 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 export class SupabaseService {
   private supabase: SupabaseClient;
   private adminSupabase: SupabaseClient;
+  private isConfigured: boolean = false;
 
-  constructor(private configService: ConfigService) {
-    const supabaseUrl = this.configService.get<string>('SUPABASE_URL', '');
-    const supabaseAnonKey = this.configService.get<string>('SUPABASE_ANON_KEY', '');
-    const supabaseServiceKey = this.configService.get<string>('SUPABASE_SERVICE_KEY', '');
+constructor(private configService: ConfigService) {
+  const supabaseUrl = this.configService.get<string>('SUPABASE_URL', '');
+  const supabaseAnonKey = this.configService.get<string>('SUPABASE_ANON_KEY', '');
+  const supabaseServiceKey = this.configService.get<string>('SUPABASE_SERVICE_KEY', '');
 
-    // Client for regular operations
-    this.supabase = createClient(supabaseUrl, supabaseAnonKey);
+  // Check if Supabase URLs are valid
+  if (supabaseUrl && supabaseAnonKey) {
+    try {
+      // Client for regular operations
+      this.supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Admin client for user management
-    this.adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
+      // Admin client for user management
+      this.adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      this.isConfigured = true;
+    } catch (error) {
+      console.warn('Failed to initialize Supabase:', error);
+      this.isConfigured = false;
+    }
+  } else {
+    console.warn('Supabase not configured - running in mock mode');
+    this.isConfigured = false;
   }
+}
 
   getClient(): SupabaseClient {
     return this.supabase;
@@ -25,6 +39,9 @@ export class SupabaseService {
 
   getAdminClient(): SupabaseClient {
     return this.adminSupabase;
+  }
+  isSupabaseConfigured(): boolean {
+    return this.isConfigured;
   }
 
   async createUser(email: string, password: string, metadata?: any) {

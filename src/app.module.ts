@@ -7,6 +7,7 @@ import { CompaniesModule } from './modules/companies/companies.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { SeederModule } from './database/seeder/seeder.module';
 import { databaseConfig } from './config/database.config';
 
 @Module({
@@ -22,6 +23,7 @@ import { databaseConfig } from './config/database.config';
     SubscriptionsModule,
     EmployeesModule,
     RolesModule,
+    SeederModule, // Add the seeder module
   ],
 })
 export class AppModule {}
