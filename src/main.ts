@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,11 +11,20 @@ async function bootstrap() {
   // Set global prefix for all routes
   app.setGlobalPrefix('api/v1');
   
+  // Global exception filter
+  app.useGlobalFilters(new HttpExceptionFilter());
+  
+  // Global response interceptor
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  
   // Global validation pipe
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     transform: true,
     forbidNonWhitelisted: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
   }));
   
   // Enable CORS
