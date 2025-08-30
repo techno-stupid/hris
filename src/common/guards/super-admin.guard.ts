@@ -14,13 +14,16 @@ export class SuperAdminGuard implements CanActivate {
     }
 
     // Check if user email matches super admin email from config
-    // We can also check against a database table of super admins
-    const superAdminEmails = this.configService.get('SUPER_ADMIN_EMAILS', '').split(',');
+    const superAdminEmails = this.configService.get<string>('SUPER_ADMIN_EMAILS', '')
+      .split(',')
+      .map(email => email.trim())
+      .filter(email => email); // Remove empty strings
     
-    if (!superAdminEmails.includes(user.email)) {
+    if (!user.email || !superAdminEmails.includes(user.email)) {
       throw new ForbiddenException('Access denied. Super admin privileges required.');
     }
 
+    request.isSuperAdmin = true;
     return true;
   }
 }

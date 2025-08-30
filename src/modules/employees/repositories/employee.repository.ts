@@ -1,6 +1,7 @@
+// src/modules/employees/repositories/employee.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOneOptions } from 'typeorm';
 import { BaseRepository } from '../../../common/repositories/base.repository';
 import { Employee } from '../entities/employee.entity';
 
@@ -13,12 +14,17 @@ export class EmployeeRepository extends BaseRepository<Employee> {
     super(employeeRepo);
   }
 
-  async findByEmail(email: string, companyId: string): Promise<Employee | null> {
+  // DON'T override findOne - it's already in BaseRepository
+  // The base findOne(id: string) method is what EmployeesService uses
+
+  async findByEmail(email: string, companyId?: string): Promise<Employee | null> {
+    const whereCondition: any = { email };
+    if (companyId) {
+      whereCondition.company = { id: companyId };
+    }
+    
     return await this.employeeRepo.findOne({
-      where: { 
-        email, 
-        company: { id: companyId } 
-      },
+      where: whereCondition,
       relations: ['roles', 'company'],
     });
   }
@@ -86,5 +92,10 @@ export class EmployeeRepository extends BaseRepository<Employee> {
 
     employee.roles = employee.roles.filter(role => role.id !== roleId);
     return await this.employeeRepo.save(employee);
+  }
+
+  // Add this method with a different name to avoid conflict
+  async findOneWithOptions(options: FindOneOptions<Employee>): Promise<Employee | null> {
+    return await this.employeeRepo.findOne(options);
   }
 }

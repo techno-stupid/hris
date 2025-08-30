@@ -3,6 +3,8 @@ import { SupabaseService } from '../../config/supabase.config';
 import { LoginDto } from './dto/login.dto';
 import { CompanyRepository } from '../companies/repositories/company.repository';
 import { EmployeeRepository } from '../employees/repositories/employee.repository';
+import { ConfigService } from '@nestjs/config';
+import { Employee } from '../employees/entities/employee.entity';
 
 @Injectable()
 export class AuthService {
@@ -10,6 +12,7 @@ export class AuthService {
     private supabaseService: SupabaseService,
     private companyRepository: CompanyRepository,
     private employeeRepository: EmployeeRepository,
+    private configService: ConfigService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -23,15 +26,15 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      // Get user context (company or employee)
-      const userContext = await this.getUserContext(data.user.id);
+      // Get user context - pass email with null check
+      const userContext = await this.getUserContext(data.user.id, data.user.email || loginDto.email);
 
       return {
         accessToken: data.session.access_token,
         refreshToken: data.session.refresh_token,
         user: {
           id: data.user.id,
-          email: data.user.email,
+          email: data.user.email || loginDto.email,
           ...userContext,
         },
       };
@@ -87,7 +90,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid token');
       }
 
-      const userContext = await this.getUserContext(user.id);
+      const userContext = await this.getUserContext(user.id, user.email || '');
       return {
         ...user,
         ...userContext,
@@ -97,24 +100,45 @@ export class AuthService {
     }
   }
 
-  private async getUserContext(supabaseUserId: string) {
+  private async getUserContext(supabaseUserId: string, email: string) {
     try {
-      // Check if user is a company admin
-      const company = await this.companyRepository.findBySupabaseId(supabaseUserId);
-      if (company) {
+      // First check if user is a super admin
+      const superAdminEmails = this.configService.get<string>('SUPER_ADMIN_EMAILS', '').split(',').map(e => e.trim());
+      if (email && superAdminEmails.includes(email)) {
         return {
-          type: 'company_admin',
-          companyId: company.id,
-          companyName: company.name,
-          subscription: {
-            name: company.subscription?.name,
-            maxEmployees: company.subscription?.maxEmployees,
-          },
+          type: 'super_admin',
+          isSuperAdmin: true,
         };
       }
 
-      // Check if user is an employee
-      const employee = await this.employeeRepository.findBySupabaseId(supabaseUserId);
+      // Check if user is a company admin (by email)
+      if (email) {
+        const company = await this.companyRepository.findByEmail(email);
+        if (company) {
+          return {
+            type: 'company_admin',
+            companyId: company.id,
+            companyName: company.name,
+            subscription: {
+              name: company.subscription?.name,
+              maxEmployees: company.subscription?.maxEmployees,
+            },
+          };
+        }
+      }
+
+      // Check if user is an employee (by email first, then by supabaseUserId)
+      let employee: Employee | null = null;  // Explicitly type the variable
+      
+      if (email) {
+        employee = await this.employeeRepository.findByEmail(email, '');
+      }
+
+      // If not found by email, try by supabaseUserId
+      if (!employee && supabaseUserId) {
+        employee = await this.employeeRepository.findBySupabaseId(supabaseUserId);
+      }
+
       if (employee) {
         return {
           type: employee.isAdmin ? 'employee_admin' : 'employee',
@@ -130,7 +154,7 @@ export class AuthService {
         };
       }
 
-      // User not found in our system (might be super admin)
+      // User not found in our system
       return { 
         type: 'unknown',
         message: 'User not associated with any company or employee account'
