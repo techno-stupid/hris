@@ -44,32 +44,108 @@ export class SeederService implements OnModuleInit {
         return;
       }
 
-      // 1. Create Subscription Plans
+      // 1. Create Super Admin user
+      await this.createSuperAdmin();
+      this.logger.log('Created super admin user');
+
+      // 2. Create Subscription Plans
       const plans = await this.createSubscriptionPlans();
       this.logger.log(`Created ${plans.length} subscription plans`);
 
-      // 2. Create Demo Company with Admin
+      // 3. Create Demo Company with Admin
       const company = await this.createDemoCompany(plans[1]); // Use Standard plan
       this.logger.log(`Created demo company: ${company.name}`);
 
-      // 3. Create Roles for the company
+      // 4. Create Roles for the company
       const roles = await this.createDefaultRoles(company);
       this.logger.log(`Created ${roles.length} default roles`);
 
-      // 4. Create Demo Employees
+      // 5. Create Demo Employees
       const employees = await this.createDemoEmployees(company, roles);
       this.logger.log(`Created ${employees.length} demo employees`);
 
       this.logger.log('Database seeding completed successfully!');
       this.logger.log('');
-      this.logger.log('=== Login Credentials ===');
-      this.logger.log('Super Admin: Use email from SUPER_ADMIN_EMAILS in .env');
-      this.logger.log('Company Admin: admin@demo-company.com / Demo@123456');
-      this.logger.log('Employee Admin: john.admin@demo-company.com / Demo@123456');
-      this.logger.log('Regular Employee: jane.doe@demo-company.com / Demo@123456');
-      this.logger.log('========================');
+      this.logger.log('========================================');
+      this.logger.log('=== LOGIN CREDENTIALS ===');
+      this.logger.log('========================================');
+      this.logger.log('');
+      this.logger.log('SUPER ADMIN:');
+      this.logger.log('  Email: superadmin@hris-saas.com');
+      this.logger.log('  Password: SuperAdmin@123456');
+      this.logger.log('');
+      this.logger.log('COMPANY ADMIN:');
+      this.logger.log('  Email: admin@demo-company.com');
+      this.logger.log('  Password: Demo@123456');
+      this.logger.log('');
+      this.logger.log('EMPLOYEE ADMIN:');
+      this.logger.log('  Email: john.admin@demo-company.com');
+      this.logger.log('  Password: Demo@123456');
+      this.logger.log('');
+      this.logger.log('REGULAR EMPLOYEE:');
+      this.logger.log('  Email: jane.doe@demo-company.com');
+      this.logger.log('  Password: Demo@123456');
+      this.logger.log('');
+      this.logger.log('========================================');
+      this.logger.log('');
+      this.logger.log('API Base URL: http://localhost:3000/api/v1');
+      this.logger.log('Swagger Docs: http://localhost:3000/api-docs');
+      this.logger.log('');
     } catch (error) {
       this.logger.error('Seeding failed:', error);
+    }
+  }
+
+  private async createSuperAdmin() {
+    const email = 'superadmin@hris-saas.com';
+    const password = 'SuperAdmin@123456';
+
+    // Add super admin email to environment if not already there
+    const currentSuperAdmins = this.configService.get('SUPER_ADMIN_EMAILS', '');
+    if (!currentSuperAdmins.includes(email)) {
+      // Note: This won't persist to .env file, but will work for current session
+      process.env.SUPER_ADMIN_EMAILS = currentSuperAdmins 
+        ? `${currentSuperAdmins},${email}` 
+        : email;
+      
+      this.logger.log(`Added ${email} to SUPER_ADMIN_EMAILS for this session`);
+      this.logger.warn('To make this permanent, add the email to SUPER_ADMIN_EMAILS in your .env file');
+    }
+
+    // Create Supabase user if configured
+    if (this.supabaseService.isSupabaseConfigured()) {
+      try {
+        const existingUser = await this.checkIfUserExists(email);
+        if (!existingUser) {
+          const supabaseUser = await this.supabaseService.createUser(
+            email,
+            password,
+            { 
+              role: 'super_admin',
+              is_super_admin: true,
+            }
+          );
+          this.logger.log(`Created super admin in Supabase: ${email}`);
+        } else {
+          this.logger.log(`Super admin already exists in Supabase: ${email}`);
+        }
+      } catch (error) {
+        this.logger.warn('Could not create super admin in Supabase, you can still use it in mock mode');
+      }
+    } else {
+      this.logger.log('Supabase not configured - super admin will work in mock mode');
+    }
+  }
+
+  private async checkIfUserExists(email: string): Promise<boolean> {
+    // This is a helper method to check if user exists
+    // In real implementation, you might want to add this to SupabaseService
+    try {
+      // For now, we'll just return false to always try creating
+      // we can this based on our Supabase setup
+      return false;
+    } catch {
+      return false;
     }
   }
 
@@ -151,6 +227,9 @@ export class SeederService implements OnModuleInit {
           'edit_employees',
           'delete_employees',
           'view_roles',
+          'create_roles',
+          'edit_roles',
+          'delete_roles',
           'assign_roles',
           'view_reports',
           'generate_reports',
