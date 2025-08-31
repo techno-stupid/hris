@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+  JoinColumn
+} from 'typeorm';
 import { SubscriptionPlan } from '../../subscriptions/entities/subscription-plan.entity';
 import { Employee } from '../../employees/entities/employee.entity';
 import { Role } from '../../roles/entities/role.entity';
@@ -17,7 +26,7 @@ export class Company {
   @Column()
   supabaseUserId: string;
 
-  @ManyToOne(() => SubscriptionPlan, plan => plan.companies, { eager: true })
+  @ManyToOne(() => SubscriptionPlan, (plan) => plan.companies, { eager: true })
   @JoinColumn()
   subscription: SubscriptionPlan;
 
@@ -30,9 +39,9 @@ export class Company {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Employee, employee => employee.company, { cascade: true })
+  @OneToMany(() => Employee, (employee) => employee.company, { cascade: true })
   employees: Employee[];
 
-  @OneToMany(() => Role, role => role.company, { cascade: true })
+  @OneToMany(() => Role, (role) => role.company, { cascade: true })
   roles: Role[];
 }

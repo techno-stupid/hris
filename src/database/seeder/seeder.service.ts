@@ -22,12 +22,13 @@ export class SeederService implements OnModuleInit {
     @InjectRepository(Role)
     private roleRepo: Repository<Role>,
     private supabaseService: SupabaseService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
 
   async onModuleInit() {
-    const shouldSeed = this.configService.get('SEED_DATABASE', 'false') === 'true';
-    
+    const shouldSeed =
+      this.configService.get('SEED_DATABASE', 'false') === 'true';
+
     if (shouldSeed) {
       await this.seed();
     }
@@ -104,12 +105,14 @@ export class SeederService implements OnModuleInit {
     const currentSuperAdmins = this.configService.get('SUPER_ADMIN_EMAILS', '');
     if (!currentSuperAdmins.includes(email)) {
       // Note: This won't persist to .env file, but will work for current session
-      process.env.SUPER_ADMIN_EMAILS = currentSuperAdmins 
-        ? `${currentSuperAdmins},${email}` 
+      process.env.SUPER_ADMIN_EMAILS = currentSuperAdmins
+        ? `${currentSuperAdmins},${email}`
         : email;
-      
+
       this.logger.log(`Added ${email} to SUPER_ADMIN_EMAILS for this session`);
-      this.logger.warn('To make this permanent, add the email to SUPER_ADMIN_EMAILS in your .env file');
+      this.logger.warn(
+        'To make this permanent, add the email to SUPER_ADMIN_EMAILS in your .env file'
+      );
     }
 
     // Create Supabase user if configured
@@ -120,9 +123,9 @@ export class SeederService implements OnModuleInit {
           const supabaseUser = await this.supabaseService.createUser(
             email,
             password,
-            { 
+            {
               role: 'super_admin',
-              is_super_admin: true,
+              is_super_admin: true
             }
           );
           this.logger.log(`Created super admin in Supabase: ${email}`);
@@ -130,10 +133,14 @@ export class SeederService implements OnModuleInit {
           this.logger.log(`Super admin already exists in Supabase: ${email}`);
         }
       } catch (error) {
-        this.logger.warn('Could not create super admin in Supabase, you can still use it in mock mode');
+        this.logger.warn(
+          'Could not create super admin in Supabase, you can still use it in mock mode'
+        );
       }
     } else {
-      this.logger.log('Supabase not configured - super admin will work in mock mode');
+      this.logger.log(
+        'Supabase not configured - super admin will work in mock mode'
+      );
     }
   }
 
@@ -155,26 +162,26 @@ export class SeederService implements OnModuleInit {
         name: 'Starter',
         maxEmployees: 10,
         price: 49.99,
-        description: 'Perfect for small startups and teams',
+        description: 'Perfect for small startups and teams'
       },
       {
         name: 'Standard',
         maxEmployees: 50,
         price: 149.99,
-        description: 'Great for growing businesses',
+        description: 'Great for growing businesses'
       },
       {
         name: 'Professional',
         maxEmployees: 200,
         price: 399.99,
-        description: 'For established companies',
+        description: 'For established companies'
       },
       {
         name: 'Enterprise',
         maxEmployees: 1000,
         price: 999.99,
-        description: 'Unlimited features for large organizations',
-      },
+        description: 'Unlimited features for large organizations'
+      }
     ];
 
     const plans: SubscriptionPlan[] = [];
@@ -186,13 +193,15 @@ export class SeederService implements OnModuleInit {
     return plans;
   }
 
-  private async createDemoCompany(subscription: SubscriptionPlan): Promise<Company> {
+  private async createDemoCompany(
+    subscription: SubscriptionPlan
+  ): Promise<Company> {
     const email = 'admin@demo-company.com';
     const password = 'Demo@123456';
 
     // Create Supabase user if configured
     let supabaseUserId = `demo-admin-${Date.now()}`;
-    
+
     if (this.supabaseService.isSupabaseConfigured()) {
       try {
         const supabaseUser = await this.supabaseService.createUser(
@@ -211,7 +220,7 @@ export class SeederService implements OnModuleInit {
       email,
       supabaseUserId,
       subscription,
-      isActive: true,
+      isActive: true
     });
 
     return await this.companyRepo.save(company);
@@ -232,10 +241,10 @@ export class SeederService implements OnModuleInit {
           'delete_roles',
           'assign_roles',
           'view_reports',
-          'generate_reports',
+          'generate_reports'
         ],
         description: 'Full HR management capabilities',
-        company,
+        company
       },
       {
         name: 'Team Lead',
@@ -243,20 +252,17 @@ export class SeederService implements OnModuleInit {
           'view_employees',
           'edit_employees',
           'view_roles',
-          'view_reports',
+          'view_reports'
         ],
         description: 'Team management capabilities',
-        company,
+        company
       },
       {
         name: 'Employee',
-        permissions: [
-          'view_employees',
-          'view_reports',
-        ],
+        permissions: ['view_employees', 'view_reports'],
         description: 'Basic employee access',
-        company,
-      },
+        company
+      }
     ];
 
     const roles: Role[] = [];
@@ -268,50 +274,55 @@ export class SeederService implements OnModuleInit {
     return roles;
   }
 
-  private async createDemoEmployees(company: Company, roles: Role[]): Promise<Employee[]> {
+  private async createDemoEmployees(
+    company: Company,
+    roles: Role[]
+  ): Promise<Employee[]> {
     const employeesData = [
       {
         name: 'John Admin',
         email: 'john.admin@demo-company.com',
         password: 'Demo@123456',
         isAdmin: true,
-        role: roles[0], // HR Manager
+        role: roles[0] // HR Manager
       },
       {
         name: 'Jane Doe',
         email: 'jane.doe@demo-company.com',
         password: 'Demo@123456',
         isAdmin: false,
-        role: roles[2], // Employee
+        role: roles[2] // Employee
       },
       {
         name: 'Bob Smith',
         email: 'bob.smith@demo-company.com',
         password: 'Demo@123456',
         isAdmin: false,
-        role: roles[1], // Team Lead
-      },
+        role: roles[1] // Team Lead
+      }
     ];
 
     const employees: Employee[] = [];
-    
+
     for (const empData of employeesData) {
       let supabaseUserId = `demo-employee-${Date.now()}-${Math.random()}`;
-      
+
       if (this.supabaseService.isSupabaseConfigured()) {
         try {
           const supabaseUser = await this.supabaseService.createUser(
             empData.email,
             empData.password,
-            { 
+            {
               role: empData.isAdmin ? 'employee_admin' : 'employee',
               company_id: company.id,
-              company_name: company.name,
+              company_name: company.name
             }
           );
           supabaseUserId = supabaseUser.user.id;
         } catch (error) {
-          this.logger.warn(`Could not create Supabase user for ${empData.email}`);
+          this.logger.warn(
+            `Could not create Supabase user for ${empData.email}`
+          );
         }
       }
 
@@ -322,7 +333,7 @@ export class SeederService implements OnModuleInit {
         isAdmin: empData.isAdmin,
         company,
         roles: [empData.role],
-        isActive: true,
+        isActive: true
       });
 
       employees.push(await this.employeeRepo.save(employee));

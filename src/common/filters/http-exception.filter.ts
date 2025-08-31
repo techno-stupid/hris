@@ -4,7 +4,7 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-  Logger,
+  Logger
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
@@ -40,7 +40,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       } else if (typeof exceptionResponse === 'object') {
         const responseObj = exceptionResponse as any;
         message = responseObj.message || message;
-        
+
         // Handle validation errors from class-validator
         if (Array.isArray(responseObj.message)) {
           message = 'Validation failed';
@@ -51,7 +51,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       }
     } else if (exception instanceof Error) {
       message = exception.message;
-      this.logger.error(`Unhandled error: ${exception.message}`, exception.stack);
+      this.logger.error(
+        `Unhandled error: ${exception.message}`,
+        exception.stack
+      );
     } else {
       this.logger.error('Unknown error type', exception);
     }
@@ -61,7 +64,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message,
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: request.url,
+      path: request.url
     };
 
     // Add error details for non-production environments
@@ -69,7 +72,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       if (errors) {
         errorResponse.errors = errors;
       }
-      if (exception instanceof Error && status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      if (
+        exception instanceof Error &&
+        status === HttpStatus.INTERNAL_SERVER_ERROR
+      ) {
         errorResponse.error = exception.stack;
       }
     } else {

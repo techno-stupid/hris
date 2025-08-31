@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+  JoinColumn
+} from 'typeorm';
 import { Company } from '../../companies/entities/company.entity';
 import { Employee } from '../../employees/entities/employee.entity';
 
@@ -16,11 +25,11 @@ export class Role {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @ManyToOne(() => Company, company => company.roles, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Company, (company) => company.roles, { onDelete: 'CASCADE' })
   @JoinColumn()
   company: Company;
 
-  @ManyToMany(() => Employee, employee => employee.roles)
+  @ManyToMany(() => Employee, (employee) => employee.roles)
   employees: Employee[];
 
   @CreateDateColumn()

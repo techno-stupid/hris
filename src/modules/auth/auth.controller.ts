@@ -1,8 +1,22 @@
-import { Controller, Post, Body, Headers, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse as SwaggerResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  HttpCode,
+  HttpStatus
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse as SwaggerResponse
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto, RefreshTokenDto } from './dto/login.dto';
-import { ApiResponseDto, ApiErrorResponseDto } from '../../common/dto/api-response.dto';
+import {
+  ApiResponseDto,
+  ApiErrorResponseDto
+} from '../../common/dto/api-response.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -12,15 +26,15 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })
-  @SwaggerResponse({ 
-    status: 200, 
+  @SwaggerResponse({
+    status: 200,
     description: 'Login successful',
-    type: ApiResponseDto,
+    type: ApiResponseDto
   })
-  @SwaggerResponse({ 
-    status: 401, 
+  @SwaggerResponse({
+    status: 401,
     description: 'Invalid credentials',
-    type: ApiErrorResponseDto,
+    type: ApiErrorResponseDto
   })
   async login(@Body() loginDto: LoginDto) {
     // The response interceptor will wrap this automatically
@@ -30,10 +44,10 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout user' })
-  @SwaggerResponse({ 
-    status: 200, 
+  @SwaggerResponse({
+    status: 200,
     description: 'Logout successful',
-    type: ApiResponseDto,
+    type: ApiResponseDto
   })
   async logout(@Headers('authorization') auth: string) {
     const token = auth?.replace('Bearer ', '');
@@ -43,15 +57,15 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
-  @SwaggerResponse({ 
-    status: 200, 
+  @SwaggerResponse({
+    status: 200,
     description: 'Token refreshed successfully',
-    type: ApiResponseDto,
+    type: ApiResponseDto
   })
-  @SwaggerResponse({ 
-    status: 401, 
+  @SwaggerResponse({
+    status: 401,
     description: 'Invalid refresh token',
-    type: ApiErrorResponseDto,
+    type: ApiErrorResponseDto
   })
   async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);

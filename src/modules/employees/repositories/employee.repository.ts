@@ -9,7 +9,7 @@ import { Employee } from '../entities/employee.entity';
 export class EmployeeRepository extends BaseRepository<Employee> {
   constructor(
     @InjectRepository(Employee)
-    private employeeRepo: Repository<Employee>,
+    private employeeRepo: Repository<Employee>
   ) {
     super(employeeRepo);
   }
@@ -17,49 +17,52 @@ export class EmployeeRepository extends BaseRepository<Employee> {
   // DON'T override findOne - it's already in BaseRepository
   // The base findOne(id: string) method is what EmployeesService uses
 
-  async findByEmail(email: string, companyId?: string): Promise<Employee | null> {
+  async findByEmail(
+    email: string,
+    companyId?: string
+  ): Promise<Employee | null> {
     const whereCondition: any = { email };
     if (companyId) {
       whereCondition.company = { id: companyId };
     }
-    
+
     return await this.employeeRepo.findOne({
       where: whereCondition,
-      relations: ['roles', 'company'],
+      relations: ['roles', 'company']
     });
   }
 
   async findBySupabaseId(supabaseUserId: string): Promise<Employee | null> {
     return await this.employeeRepo.findOne({
       where: { supabaseUserId },
-      relations: ['roles', 'company'],
+      relations: ['roles', 'company']
     });
   }
 
   async findAllByCompany(companyId: string): Promise<Employee[]> {
     return await this.employeeRepo.find({
       where: { company: { id: companyId } },
-      relations: ['roles'],
+      relations: ['roles']
     });
   }
 
   async findAdminsByCompany(companyId: string): Promise<Employee[]> {
     return await this.employeeRepo.find({
-      where: { 
+      where: {
         company: { id: companyId },
-        isAdmin: true 
+        isAdmin: true
       },
-      relations: ['roles'],
+      relations: ['roles']
     });
   }
 
   async findWithRoles(id: string, companyId: string): Promise<Employee | null> {
     return await this.employeeRepo.findOne({
-      where: { 
-        id, 
-        company: { id: companyId } 
+      where: {
+        id,
+        company: { id: companyId }
       },
-      relations: ['roles', 'company'],
+      relations: ['roles', 'company']
     });
   }
 
@@ -69,10 +72,13 @@ export class EmployeeRepository extends BaseRepository<Employee> {
     });
   }
 
-  async assignRole(employeeId: string, roleId: string): Promise<Employee | null> {
+  async assignRole(
+    employeeId: string,
+    roleId: string
+  ): Promise<Employee | null> {
     const employee = await this.employeeRepo.findOne({
       where: { id: employeeId },
-      relations: ['roles'],
+      relations: ['roles']
     });
 
     if (!employee) return null;
@@ -82,20 +88,25 @@ export class EmployeeRepository extends BaseRepository<Employee> {
     return employee;
   }
 
-  async removeRole(employeeId: string, roleId: string): Promise<Employee | null> {
+  async removeRole(
+    employeeId: string,
+    roleId: string
+  ): Promise<Employee | null> {
     const employee = await this.employeeRepo.findOne({
       where: { id: employeeId },
-      relations: ['roles'],
+      relations: ['roles']
     });
 
     if (!employee) return null;
 
-    employee.roles = employee.roles.filter(role => role.id !== roleId);
+    employee.roles = employee.roles.filter((role) => role.id !== roleId);
     return await this.employeeRepo.save(employee);
   }
 
   // Add this method with a different name to avoid conflict
-  async findOneWithOptions(options: FindOneOptions<Employee>): Promise<Employee | null> {
+  async findOneWithOptions(
+    options: FindOneOptions<Employee>
+  ): Promise<Employee | null> {
     return await this.employeeRepo.findOne(options);
   }
 }

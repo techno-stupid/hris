@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException
+} from '@nestjs/common';
 import { RoleRepository } from './repositories/role.repository';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -6,9 +10,7 @@ import { Company } from '../companies/entities/company.entity';
 
 @Injectable()
 export class RolesService {
-  constructor(
-    private roleRepository: RoleRepository,
-  ) {}
+  constructor(private roleRepository: RoleRepository) {}
 
   // Predefined permissions
   static readonly AVAILABLE_PERMISSIONS = [
@@ -24,7 +26,7 @@ export class RolesService {
     'view_reports',
     'generate_reports',
     'view_company_settings',
-    'edit_company_settings',
+    'edit_company_settings'
   ];
 
   async create(createRoleDto: CreateRoleDto, company: Company) {
@@ -42,25 +44,25 @@ export class RolesService {
 
     const role = await this.roleRepository.create({
       ...createRoleDto,
-      company,
+      company
     });
 
     return {
       id: role.id,
       name: role.name,
       permissions: role.permissions,
-      description: role.description,
+      description: role.description
     };
   }
 
   async findAllByCompany(companyId: string) {
     const roles = await this.roleRepository.findByCompany(companyId);
-    return roles.map(role => ({
+    return roles.map((role) => ({
       id: role.id,
       name: role.name,
       permissions: role.permissions,
       description: role.description,
-      createdAt: role.createdAt,
+      createdAt: role.createdAt
     }));
   }
 
@@ -83,11 +85,11 @@ export class RolesService {
       name: role.name,
       permissions: role.permissions,
       description: role.description,
-      employees: role.employees.map(emp => ({
+      employees: role.employees.map((emp) => ({
         id: emp.id,
         name: emp.name,
-        email: emp.email,
-      })),
+        email: emp.email
+      }))
     };
   }
 
@@ -132,13 +134,13 @@ export class RolesService {
 
   async getAvailablePermissions() {
     return {
-      permissions: RolesService.AVAILABLE_PERMISSIONS,
+      permissions: RolesService.AVAILABLE_PERMISSIONS
     };
   }
 
   private validatePermissions(permissions: string[]) {
     const invalidPermissions = permissions.filter(
-      p => !RolesService.AVAILABLE_PERMISSIONS.includes(p)
+      (p) => !RolesService.AVAILABLE_PERMISSIONS.includes(p)
     );
 
     if (invalidPermissions.length > 0) {

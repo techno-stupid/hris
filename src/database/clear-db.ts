@@ -12,7 +12,7 @@ const AppDataSource = new DataSource({
   password: process.env.DATABASE_PASSWORD || '',
   database: process.env.DATABASE_NAME || 'hris_saas',
   synchronize: false,
-  logging: true,
+  logging: true
 });
 
 async function clearDatabase() {
@@ -26,7 +26,7 @@ async function clearDatabase() {
       'DROP TABLE IF EXISTS employees CASCADE',
       'DROP TABLE IF EXISTS roles CASCADE',
       'DROP TABLE IF EXISTS companies CASCADE',
-      'DROP TABLE IF EXISTS subscription_plans CASCADE',
+      'DROP TABLE IF EXISTS subscription_plans CASCADE'
     ];
 
     for (const query of queries) {

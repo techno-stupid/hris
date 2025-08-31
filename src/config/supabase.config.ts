@@ -8,30 +8,36 @@ export class SupabaseService {
   private adminSupabase: SupabaseClient;
   private isConfigured: boolean = false;
 
-constructor(private configService: ConfigService) {
-  const supabaseUrl = this.configService.get<string>('SUPABASE_URL', '');
-  const supabaseAnonKey = this.configService.get<string>('SUPABASE_ANON_KEY', '');
-  const supabaseServiceKey = this.configService.get<string>('SUPABASE_SERVICE_KEY', '');
+  constructor(private configService: ConfigService) {
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL', '');
+    const supabaseAnonKey = this.configService.get<string>(
+      'SUPABASE_ANON_KEY',
+      ''
+    );
+    const supabaseServiceKey = this.configService.get<string>(
+      'SUPABASE_SERVICE_KEY',
+      ''
+    );
 
-  // Check if Supabase URLs are valid
-  if (supabaseUrl && supabaseAnonKey) {
-    try {
-      // Client for regular operations
-      this.supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Check if Supabase URLs are valid
+    if (supabaseUrl && supabaseAnonKey) {
+      try {
+        // Client for regular operations
+        this.supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-      // Admin client for user management
-      this.adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
-      
-      this.isConfigured = true;
-    } catch (error) {
-      console.warn('Failed to initialize Supabase:', error);
+        // Admin client for user management
+        this.adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        this.isConfigured = true;
+      } catch (error) {
+        console.warn('Failed to initialize Supabase:', error);
+        this.isConfigured = false;
+      }
+    } else {
+      console.warn('Supabase not configured - running in mock mode');
       this.isConfigured = false;
     }
-  } else {
-    console.warn('Supabase not configured - running in mock mode');
-    this.isConfigured = false;
   }
-}
 
   getClient(): SupabaseClient {
     return this.supabase;
@@ -49,7 +55,7 @@ constructor(private configService: ConfigService) {
       email,
       password,
       email_confirm: true,
-      user_metadata: metadata,
+      user_metadata: metadata
     });
 
     if (error) {
@@ -62,7 +68,7 @@ constructor(private configService: ConfigService) {
   async updateUser(userId: string, updates: any) {
     const { data, error } = await this.adminSupabase.auth.admin.updateUserById(
       userId,
-      updates,
+      updates
     );
 
     if (error) {
@@ -84,7 +90,7 @@ constructor(private configService: ConfigService) {
 
   async verifyToken(token: string) {
     const { data, error } = await this.supabase.auth.getUser(token);
-    
+
     if (error) {
       throw new Error('Invalid token');
     }
@@ -95,7 +101,7 @@ constructor(private configService: ConfigService) {
   async signIn(email: string, password: string) {
     const { data, error } = await this.supabase.auth.signInWithPassword({
       email,
-      password,
+      password
     });
 
     if (error) {
@@ -107,7 +113,7 @@ constructor(private configService: ConfigService) {
 
   async signOut(token: string) {
     const { error } = await this.supabase.auth.signOut();
-    
+
     if (error) {
       throw new Error(`Logout failed: ${error.message}`);
     }
@@ -117,7 +123,7 @@ constructor(private configService: ConfigService) {
 
   async refreshToken(refreshToken: string) {
     const { data, error } = await this.supabase.auth.refreshSession({
-      refresh_token: refreshToken,
+      refresh_token: refreshToken
     });
 
     if (error) {

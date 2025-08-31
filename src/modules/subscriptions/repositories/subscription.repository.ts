@@ -8,7 +8,7 @@ import { SubscriptionPlan } from '../entities/subscription-plan.entity';
 export class SubscriptionRepository extends BaseRepository<SubscriptionPlan> {
   constructor(
     @InjectRepository(SubscriptionPlan)
-    private subscriptionRepo: Repository<SubscriptionPlan>,
+    private subscriptionRepo: Repository<SubscriptionPlan>
   ) {
     super(subscriptionRepo);
   }
@@ -16,20 +16,20 @@ export class SubscriptionRepository extends BaseRepository<SubscriptionPlan> {
   async findActive(): Promise<SubscriptionPlan[]> {
     return await this.subscriptionRepo.find({
       where: { isActive: true },
-      order: { price: 'ASC' },
+      order: { price: 'ASC' }
     });
   }
 
   async findByName(name: string): Promise<SubscriptionPlan | null> {
     return await this.subscriptionRepo.findOne({
-      where: { name },
+      where: { name }
     });
   }
 
   async findWithCompanies(id: string): Promise<SubscriptionPlan | null> {
     return await this.subscriptionRepo.findOne({
       where: { id },
-      relations: ['companies'],
+      relations: ['companies']
     });
   }
 
@@ -48,7 +48,7 @@ export class SubscriptionRepository extends BaseRepository<SubscriptionPlan> {
       companiesCount: plan.companies?.length || 0,
       maxEmployees: plan.maxEmployees,
       price: plan.price,
-      revenue: plan.price * (plan.companies?.length || 0),
+      revenue: plan.price * (plan.companies?.length || 0)
     };
   }
 }

@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -14,13 +19,16 @@ export class SuperAdminGuard implements CanActivate {
     }
 
     // Check if user email matches super admin email from config
-    const superAdminEmails = this.configService.get<string>('SUPER_ADMIN_EMAILS', '')
+    const superAdminEmails = this.configService
+      .get<string>('SUPER_ADMIN_EMAILS', '')
       .split(',')
-      .map(email => email.trim())
-      .filter(email => email); // Remove empty strings
-    
+      .map((email) => email.trim())
+      .filter((email) => email); // Remove empty strings
+
     if (!user.email || !superAdminEmails.includes(user.email)) {
-      throw new ForbiddenException('Access denied. Super admin privileges required.');
+      throw new ForbiddenException(
+        'Access denied. Super admin privileges required.'
+      );
     }
 
     request.isSuperAdmin = true;

@@ -1,11 +1,11 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Body, 
-  Param, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
   UseGuards,
   HttpCode,
   HttpStatus
@@ -31,7 +31,7 @@ import { Company } from './entities/company.entity';
 export class CompanyAdminController {
   constructor(
     private employeesService: EmployeesService,
-    private rolesService: RolesService,
+    private rolesService: RolesService
   ) {}
 
   // ============ Employee Management ============
@@ -41,7 +41,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Create new employee' })
   async createEmployee(
     @Body() createEmployeeDto: CreateEmployeeDto,
-    @CurrentCompany() company: Company,
+    @CurrentCompany() company: Company
   ) {
     return this.employeesService.create(createEmployeeDto, company);
   }
@@ -56,7 +56,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Get employee by ID' })
   async getEmployee(
     @Param('id') id: string,
-    @Param('companyId') companyId: string,
+    @Param('companyId') companyId: string
   ) {
     return this.employeesService.findOne(id, companyId);
   }
@@ -67,7 +67,7 @@ export class CompanyAdminController {
   async updateEmployee(
     @Param('id') id: string,
     @Param('companyId') companyId: string,
-    @Body() updateEmployeeDto: UpdateEmployeeDto,
+    @Body() updateEmployeeDto: UpdateEmployeeDto
   ) {
     return this.employeesService.update(id, companyId, updateEmployeeDto);
   }
@@ -78,7 +78,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Delete employee' })
   async deleteEmployee(
     @Param('id') id: string,
-    @Param('companyId') companyId: string,
+    @Param('companyId') companyId: string
   ) {
     return this.employeesService.delete(id, companyId);
   }
@@ -89,9 +89,13 @@ export class CompanyAdminController {
   async assignRole(
     @Param('employeeId') employeeId: string,
     @Param('companyId') companyId: string,
-    @Body() assignRoleDto: AssignRoleDto,
+    @Body() assignRoleDto: AssignRoleDto
   ) {
-    return this.employeesService.assignRole(employeeId, assignRoleDto, companyId);
+    return this.employeesService.assignRole(
+      employeeId,
+      assignRoleDto,
+      companyId
+    );
   }
 
   @Delete('employees/:employeeId/roles/:roleId')
@@ -101,7 +105,7 @@ export class CompanyAdminController {
   async removeRole(
     @Param('employeeId') employeeId: string,
     @Param('roleId') roleId: string,
-    @Param('companyId') companyId: string,
+    @Param('companyId') companyId: string
   ) {
     return this.employeesService.removeRole(employeeId, roleId, companyId);
   }
@@ -113,7 +117,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Create new role' })
   async createRole(
     @Body() createRoleDto: CreateRoleDto,
-    @CurrentCompany() company: Company,
+    @CurrentCompany() company: Company
   ) {
     return this.rolesService.create(createRoleDto, company);
   }
@@ -134,7 +138,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Get role by ID' })
   async getRole(
     @Param('id') id: string,
-    @Param('companyId') companyId: string,
+    @Param('companyId') companyId: string
   ) {
     return this.rolesService.findOne(id, companyId);
   }
@@ -143,7 +147,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Get employees with this role' })
   async getRoleEmployees(
     @Param('id') id: string,
-    @Param('companyId') companyId: string,
+    @Param('companyId') companyId: string
   ) {
     return this.rolesService.findWithEmployees(id, companyId);
   }
@@ -154,7 +158,7 @@ export class CompanyAdminController {
   async updateRole(
     @Param('id') id: string,
     @Param('companyId') companyId: string,
-    @Body() updateRoleDto: UpdateRoleDto,
+    @Body() updateRoleDto: UpdateRoleDto
   ) {
     return this.rolesService.update(id, companyId, updateRoleDto);
   }
@@ -165,7 +169,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Delete role' })
   async deleteRole(
     @Param('id') id: string,
-    @Param('companyId') companyId: string,
+    @Param('companyId') companyId: string
   ) {
     return this.rolesService.delete(id, companyId);
   }

@@ -1,4 +1,9 @@
-import { Repository, FindOptionsWhere, DeepPartial, ObjectLiteral } from 'typeorm';
+import {
+  Repository,
+  FindOptionsWhere,
+  DeepPartial,
+  ObjectLiteral
+} from 'typeorm';
 
 export abstract class BaseRepository<T extends ObjectLiteral> {
   constructor(protected readonly repository: Repository<T>) {}
@@ -13,8 +18,8 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
   }
 
   async findOne(id: string): Promise<T | null> {
-    return await this.repository.findOne({ 
-      where: { id } as unknown as FindOptionsWhere<T> 
+    return await this.repository.findOne({
+      where: { id } as unknown as FindOptionsWhere<T>
     });
   }
 
@@ -46,8 +51,8 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
   }
 
   async exists(id: string): Promise<boolean> {
-    const count = await this.repository.count({ 
-      where: { id } as unknown as FindOptionsWhere<T> 
+    const count = await this.repository.count({
+      where: { id } as unknown as FindOptionsWhere<T>
     });
     return count > 0;
   }
@@ -55,7 +60,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
   async findWithRelations(id: string, relations: string[]): Promise<T | null> {
     return await this.repository.findOne({
       where: { id } as unknown as FindOptionsWhere<T>,
-      relations,
+      relations
     });
   }
 
@@ -63,7 +68,10 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     return await this.repository.find({ relations });
   }
 
-  async findAllPaginated(page: number = 1, limit: number = 10): Promise<{
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
     data: T[];
     total: number;
     page: number;
@@ -71,14 +79,14 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
   }> {
     const [data, total] = await this.repository.findAndCount({
       skip: (page - 1) * limit,
-      take: limit,
+      take: limit
     });
 
     return {
       data,
       total,
       page,
-      lastPage: Math.ceil(total / limit),
+      lastPage: Math.ceil(total / limit)
     };
   }
 

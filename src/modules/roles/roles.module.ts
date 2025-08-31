@@ -8,9 +8,9 @@ import { CompaniesModule } from '../companies/companies.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Role]),
-    forwardRef(() => CompaniesModule),
+    forwardRef(() => CompaniesModule)
   ],
   providers: [RolesService, RoleRepository],
-  exports: [RolesService, RoleRepository],
+  exports: [RolesService, RoleRepository]
 })
 export class RolesModule {}

@@ -1,5 +1,10 @@
 // src/common/guards/tenant.guard.ts
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException
+} from '@nestjs/common';
 import { CompanyRepository } from '../../modules/companies/repositories/company.repository';
 import { EmployeeRepository } from '../../modules/employees/repositories/employee.repository';
 import { ConfigService } from '@nestjs/config';
@@ -10,20 +15,26 @@ export class TenantGuard implements CanActivate {
   constructor(
     private companyRepository: CompanyRepository,
     private employeeRepository: EmployeeRepository,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    const companyId = request.params.companyId || request.headers['x-company-id'];
+    const companyId =
+      request.params.companyId || request.headers['x-company-id'];
 
     if (!user || !companyId) {
-      throw new ForbiddenException('Missing authentication or company information');
+      throw new ForbiddenException(
+        'Missing authentication or company information'
+      );
     }
 
     // Check if user is a super admin (they can access any company)
-    const superAdminEmails = this.configService.get<string>('SUPER_ADMIN_EMAILS', '').split(',').map(e => e.trim());
+    const superAdminEmails = this.configService
+      .get<string>('SUPER_ADMIN_EMAILS', '')
+      .split(',')
+      .map((e) => e.trim());
     if (user.email && superAdminEmails.includes(user.email)) {
       // Super admin can access any company
       const company = await this.companyRepository.findOne(companyId);
@@ -46,8 +57,8 @@ export class TenantGuard implements CanActivate {
     }
 
     // Check if user is an employee of the company (by email first)
-    let employee: Employee | null = null;  // Explicitly type the variable
-    
+    let employee: Employee | null = null; // Explicitly type the variable
+
     if (user.email) {
       employee = await this.employeeRepository.findByEmail(user.email);
     }

@@ -1,4 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  CreateDateColumn,
+  UpdateDateColumn,
+  JoinColumn
+} from 'typeorm';
 import { Company } from '../../companies/entities/company.entity';
 import { Role } from '../../roles/entities/role.entity';
 
@@ -22,15 +32,17 @@ export class Employee {
   @Column({ default: true })
   isActive: boolean;
 
-  @ManyToOne(() => Company, company => company.employees, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Company, (company) => company.employees, {
+    onDelete: 'CASCADE'
+  })
   @JoinColumn()
   company: Company;
 
-  @ManyToMany(() => Role, role => role.employees)
+  @ManyToMany(() => Role, (role) => role.employees)
   @JoinTable({
     name: 'employee_roles',
     joinColumn: { name: 'employeeId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' }
   })
   roles: Role[];
 
