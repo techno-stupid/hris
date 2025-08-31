@@ -7,32 +7,34 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Set global prefix for all routes
   app.setGlobalPrefix('api/v1');
-  
+
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
-  
+
   // Global response interceptor
   app.useGlobalInterceptors(new ResponseInterceptor());
-  
+
   // Global validation pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    forbidNonWhitelisted: true,
-    transformOptions: {
-      enableImplicitConversion: true,
-    },
-  }));
-  
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true
+      }
+    })
+  );
+
   // Enable CORS
   app.enableCors({
     origin: true,
-    credentials: true,
+    credentials: true
   });
-  
+
   // Swagger documentation setup
   const config = new DocumentBuilder()
     .setTitle('HRIS SaaS API')
@@ -41,10 +43,10 @@ async function bootstrap() {
     .addBearerAuth()
     .setBasePath('api/v1')
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
-  
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}/api/v1`);

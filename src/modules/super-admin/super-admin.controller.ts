@@ -1,11 +1,11 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Body, 
-  Param, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
   UseGuards,
   Query,
   HttpCode,
@@ -28,7 +28,7 @@ import { UpdateSubscriptionPlanDto } from '../subscriptions/dto/update-subscript
 export class SuperAdminController {
   constructor(
     private companiesService: CompaniesService,
-    private subscriptionsService: SubscriptionsService,
+    private subscriptionsService: SubscriptionsService
   ) {}
 
   // ============ Company Management ============
@@ -61,7 +61,7 @@ export class SuperAdminController {
   @ApiOperation({ summary: 'Update company' })
   async updateCompany(
     @Param('id') id: string,
-    @Body() updateCompanyDto: UpdateCompanyDto,
+    @Body() updateCompanyDto: UpdateCompanyDto
   ) {
     return this.companiesService.update(id, updateCompanyDto);
   }
@@ -77,7 +77,9 @@ export class SuperAdminController {
 
   @Post('subscriptions')
   @ApiOperation({ summary: 'Create subscription plan' })
-  async createSubscription(@Body() createSubscriptionPlanDto: CreateSubscriptionPlanDto) {
+  async createSubscription(
+    @Body() createSubscriptionPlanDto: CreateSubscriptionPlanDto
+  ) {
     return this.subscriptionsService.create(createSubscriptionPlanDto);
   }
 
@@ -109,7 +111,7 @@ export class SuperAdminController {
   @ApiOperation({ summary: 'Update subscription plan' })
   async updateSubscription(
     @Param('id') id: string,
-    @Body() updateSubscriptionPlanDto: UpdateSubscriptionPlanDto,
+    @Body() updateSubscriptionPlanDto: UpdateSubscriptionPlanDto
   ) {
     return this.subscriptionsService.update(id, updateSubscriptionPlanDto);
   }

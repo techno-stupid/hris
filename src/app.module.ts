@@ -12,9 +12,9 @@ import { databaseConfig } from './config/database.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ 
+    ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: '.env'
     }),
     TypeOrmModule.forRootAsync(databaseConfig),
     AuthModule,
@@ -23,7 +23,7 @@ import { databaseConfig } from './config/database.config';
     SubscriptionsModule,
     EmployeesModule,
     RolesModule,
-    SeederModule, // Add the seeder module
-  ],
+    SeederModule // Add the seeder module
+  ]
 })
 export class AppModule {}

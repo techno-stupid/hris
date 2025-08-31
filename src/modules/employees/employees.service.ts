@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException
+} from '@nestjs/common';
 import { EmployeeRepository } from './repositories/employee.repository';
 import { RoleRepository } from '../roles/repositories/role.repository';
 import { CompanyRepository } from '../companies/repositories/company.repository';
@@ -14,12 +19,14 @@ export class EmployeesService {
     private employeeRepository: EmployeeRepository,
     private roleRepository: RoleRepository,
     private companyRepository: CompanyRepository,
-    private supabaseService: SupabaseService,
+    private supabaseService: SupabaseService
   ) {}
 
   async create(createEmployeeDto: CreateEmployeeDto, company: Company) {
     // Check employee limit
-    const employeeCount = await this.employeeRepository.countByCompany(company.id);
+    const employeeCount = await this.employeeRepository.countByCompany(
+      company.id
+    );
     if (employeeCount >= company.subscription.maxEmployees) {
       throw new ForbiddenException(
         `Employee limit reached. Maximum allowed: ${company.subscription.maxEmployees}`
@@ -32,17 +39,19 @@ export class EmployeesService {
       company.id
     );
     if (existingEmployee) {
-      throw new BadRequestException('Employee with this email already exists in the company');
+      throw new BadRequestException(
+        'Employee with this email already exists in the company'
+      );
     }
 
     // Create Supabase user
     const supabaseUser = await this.supabaseService.createUser(
       createEmployeeDto.email,
       createEmployeeDto.password,
-      { 
+      {
         role: createEmployeeDto.isAdmin ? 'employee_admin' : 'employee',
         company_id: company.id,
-        company_name: company.name,
+        company_name: company.name
       }
     );
 
@@ -53,7 +62,7 @@ export class EmployeesService {
         email: createEmployeeDto.email,
         isAdmin: createEmployeeDto.isAdmin || false,
         supabaseUserId: supabaseUser.user.id,
-        company,
+        company
       });
 
       return {
@@ -61,7 +70,7 @@ export class EmployeesService {
         name: employee.name,
         email: employee.email,
         isAdmin: employee.isAdmin,
-        companyId: company.id,
+        companyId: company.id
       };
     } catch (error) {
       // Rollback Supabase user if employee creation fails
@@ -72,16 +81,17 @@ export class EmployeesService {
 
   async findAllByCompany(companyId: string) {
     const employees = await this.employeeRepository.findAllByCompany(companyId);
-    return employees.map(emp => ({
+    return employees.map((emp) => ({
       id: emp.id,
       name: emp.name,
       email: emp.email,
       isAdmin: emp.isAdmin,
-      roles: emp.roles?.map(role => ({
-        id: role.id,
-        name: role.name,
-      })) || [],
-      isActive: emp.isActive,
+      roles:
+        emp.roles?.map((role) => ({
+          id: role.id,
+          name: role.name
+        })) || [],
+      isActive: emp.isActive
     }));
   }
 
@@ -93,7 +103,11 @@ export class EmployeesService {
     return employee;
   }
 
-  async update(id: string, companyId: string, updateEmployeeDto: UpdateEmployeeDto) {
+  async update(
+    id: string,
+    companyId: string,
+    updateEmployeeDto: UpdateEmployeeDto
+  ) {
     const employee = await this.employeeRepository.findOne(id);
     if (!employee || employee.company.id !== companyId) {
       throw new NotFoundException('Employee not found');
@@ -102,8 +116,15 @@ export class EmployeesService {
     return await this.employeeRepository.update(id, updateEmployeeDto);
   }
 
-  async assignRole(employeeId: string, assignRoleDto: AssignRoleDto, companyId: string) {
-    const employee = await this.employeeRepository.findWithRoles(employeeId, companyId);
+  async assignRole(
+    employeeId: string,
+    assignRoleDto: AssignRoleDto,
+    companyId: string
+  ) {
+    const employee = await this.employeeRepository.findWithRoles(
+      employeeId,
+      companyId
+    );
     if (!employee) {
       throw new NotFoundException('Employee not found');
     }
@@ -114,7 +135,7 @@ export class EmployeesService {
     }
 
     // Check if role already assigned
-    if (employee.roles.some(r => r.id === role.id)) {
+    if (employee.roles.some((r) => r.id === role.id)) {
       throw new BadRequestException('Role already assigned to employee');
     }
 
@@ -126,13 +147,16 @@ export class EmployeesService {
       employee: {
         id: employee.id,
         name: employee.name,
-        roles: employee.roles.map(r => ({ id: r.id, name: r.name })),
-      },
+        roles: employee.roles.map((r) => ({ id: r.id, name: r.name }))
+      }
     };
   }
 
   async removeRole(employeeId: string, roleId: string, companyId: string) {
-    const employee = await this.employeeRepository.removeRole(employeeId, roleId);
+    const employee = await this.employeeRepository.removeRole(
+      employeeId,
+      roleId
+    );
     if (!employee) {
       throw new NotFoundException('Employee or role not found');
     }
@@ -142,8 +166,8 @@ export class EmployeesService {
       employee: {
         id: employee.id,
         name: employee.name,
-        roles: employee.roles.map(r => ({ id: r.id, name: r.name })),
-      },
+        roles: employee.roles.map((r) => ({ id: r.id, name: r.name }))
+      }
     };
   }
 
@@ -159,7 +183,7 @@ export class EmployeesService {
     // Disable Supabase user
     if (employee.supabaseUserId) {
       await this.supabaseService.updateUser(employee.supabaseUserId, {
-        banned: true,
+        banned: true
       });
     }
 

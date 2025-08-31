@@ -18,15 +18,16 @@ export class EmployeeController {
       name: employee.name,
       email: employee.email,
       isAdmin: employee.isAdmin,
-      roles: employee.roles?.map(role => ({
-        id: role.id,
-        name: role.name,
-        permissions: role.permissions,
-      })) || [],
+      roles:
+        employee.roles?.map((role) => ({
+          id: role.id,
+          name: role.name,
+          permissions: role.permissions
+        })) || [],
       company: {
         id: employee.company.id,
-        name: employee.company.name,
-      },
+        name: employee.company.name
+      }
     };
   }
 }

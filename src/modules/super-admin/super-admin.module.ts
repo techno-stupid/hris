@@ -4,10 +4,7 @@ import { CompaniesModule } from '../companies/companies.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
-  imports: [
-    CompaniesModule,
-    SubscriptionsModule,
-  ],
-  controllers: [SuperAdminController],
+  imports: [CompaniesModule, SubscriptionsModule],
+  controllers: [SuperAdminController]
 })
 export class SuperAdminModule {}

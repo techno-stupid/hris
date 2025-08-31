@@ -11,10 +11,10 @@ import { RolesModule } from '../roles/roles.module';
   imports: [
     TypeOrmModule.forFeature([Employee]),
     forwardRef(() => CompaniesModule),
-    forwardRef(() => RolesModule),
+    forwardRef(() => RolesModule)
   ],
   controllers: [EmployeeController],
   providers: [EmployeesService, EmployeeRepository],
-  exports: [EmployeesService, EmployeeRepository],
+  exports: [EmployeesService, EmployeeRepository]
 })
 export class EmployeesModule {}

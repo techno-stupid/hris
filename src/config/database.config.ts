@@ -12,7 +12,7 @@ export const databaseConfig: TypeOrmModuleAsyncOptions = {
     database: configService.get<string>('DATABASE_NAME', 'hris_saas'),
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     synchronize: configService.get('NODE_ENV') === 'development',
-    logging: configService.get('NODE_ENV') === 'development',
+    logging: configService.get('NODE_ENV') === 'development'
   }),
-  inject: [ConfigService],
+  inject: [ConfigService]
 };

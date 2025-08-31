@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException
+} from '@nestjs/common';
 import { SupabaseService } from '../../config/supabase.config';
 import { LoginDto } from './dto/login.dto';
 import { CompanyRepository } from '../companies/repositories/company.repository';
@@ -12,14 +16,14 @@ export class AuthService {
     private supabaseService: SupabaseService,
     private companyRepository: CompanyRepository,
     private employeeRepository: EmployeeRepository,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
 
   async login(loginDto: LoginDto) {
     try {
       const data = await this.supabaseService.signIn(
         loginDto.email,
-        loginDto.password,
+        loginDto.password
       );
 
       if (!data || !data.session) {
@@ -27,7 +31,10 @@ export class AuthService {
       }
 
       // Get user context - pass email with null check
-      const userContext = await this.getUserContext(data.user.id, data.user.email || loginDto.email);
+      const userContext = await this.getUserContext(
+        data.user.id,
+        data.user.email || loginDto.email
+      );
 
       return {
         accessToken: data.session.access_token,
@@ -35,8 +42,8 @@ export class AuthService {
         user: {
           id: data.user.id,
           email: data.user.email || loginDto.email,
-          ...userContext,
-        },
+          ...userContext
+        }
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -51,7 +58,7 @@ export class AuthService {
       if (!token) {
         throw new BadRequestException('No token provided');
       }
-      
+
       await this.supabaseService.signOut(token);
       return { message: 'Logged out successfully' };
     } catch (error) {
@@ -66,14 +73,14 @@ export class AuthService {
       }
 
       const data = await this.supabaseService.refreshToken(refreshToken);
-      
+
       if (!data || !data.session) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
       return {
         accessToken: data.session.access_token,
-        refreshToken: data.session.refresh_token,
+        refreshToken: data.session.refresh_token
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -93,21 +100,26 @@ export class AuthService {
       const userContext = await this.getUserContext(user.id, user.email || '');
       return {
         ...user,
-        ...userContext,
+        ...userContext
       };
     } catch (error) {
-      throw new UnauthorizedException('Token validation failed: ' + error.message);
+      throw new UnauthorizedException(
+        'Token validation failed: ' + error.message
+      );
     }
   }
 
   private async getUserContext(supabaseUserId: string, email: string) {
     try {
       // First check if user is a super admin
-      const superAdminEmails = this.configService.get<string>('SUPER_ADMIN_EMAILS', '').split(',').map(e => e.trim());
+      const superAdminEmails = this.configService
+        .get<string>('SUPER_ADMIN_EMAILS', '')
+        .split(',')
+        .map((e) => e.trim());
       if (email && superAdminEmails.includes(email)) {
         return {
           type: 'super_admin',
-          isSuperAdmin: true,
+          isSuperAdmin: true
         };
       }
 
@@ -121,22 +133,23 @@ export class AuthService {
             companyName: company.name,
             subscription: {
               name: company.subscription?.name,
-              maxEmployees: company.subscription?.maxEmployees,
-            },
+              maxEmployees: company.subscription?.maxEmployees
+            }
           };
         }
       }
 
       // Check if user is an employee (by email first, then by supabaseUserId)
-      let employee: Employee | null = null;  // Explicitly type the variable
-      
+      let employee: Employee | null = null; // Explicitly type the variable
+
       if (email) {
         employee = await this.employeeRepository.findByEmail(email, '');
       }
 
       // If not found by email, try by supabaseUserId
       if (!employee && supabaseUserId) {
-        employee = await this.employeeRepository.findBySupabaseId(supabaseUserId);
+        employee =
+          await this.employeeRepository.findBySupabaseId(supabaseUserId);
       }
 
       if (employee) {
@@ -146,34 +159,40 @@ export class AuthService {
           employeeName: employee.name,
           companyId: employee.company?.id,
           companyName: employee.company?.name,
-          roles: employee.roles?.map(role => ({
-            id: role.id,
-            name: role.name,
-            permissions: role.permissions,
-          })) || [],
+          roles:
+            employee.roles?.map((role) => ({
+              id: role.id,
+              name: role.name,
+              permissions: role.permissions
+            })) || []
         };
       }
 
       // User not found in our system
-      return { 
+      return {
         type: 'unknown',
         message: 'User not associated with any company or employee account'
       };
     } catch (error) {
       console.error('Error getting user context:', error);
-      return { 
+      return {
         type: 'unknown',
         error: 'Failed to retrieve user context'
       };
     }
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ) {
     try {
       // First verify the current password by trying to sign in
-      const user = await this.companyRepository.findBySupabaseId(userId) || 
-                   await this.employeeRepository.findBySupabaseId(userId);
-      
+      const user =
+        (await this.companyRepository.findBySupabaseId(userId)) ||
+        (await this.employeeRepository.findBySupabaseId(userId));
+
       if (!user) {
         throw new BadRequestException('User not found');
       }
@@ -183,15 +202,17 @@ export class AuthService {
 
       // Update password
       const result = await this.supabaseService.updateUser(userId, {
-        password: newPassword,
+        password: newPassword
       });
 
-      return { 
+      return {
         message: 'Password changed successfully',
         requiresNewLogin: true
       };
     } catch (error) {
-      throw new BadRequestException('Failed to change password: ' + error.message);
+      throw new BadRequestException(
+        'Failed to change password: ' + error.message
+      );
     }
   }
 
@@ -199,19 +220,21 @@ export class AuthService {
     try {
       const client = this.supabaseService.getClient();
       const { error } = await client.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.FRONTEND_URL}/reset-password`,
+        redirectTo: `${process.env.FRONTEND_URL}/reset-password`
       });
 
       if (error) {
         throw new BadRequestException('Failed to send reset email');
       }
 
-      return { 
+      return {
         message: 'Password reset email sent successfully',
         email
       };
     } catch (error) {
-      throw new BadRequestException('Failed to process password reset: ' + error.message);
+      throw new BadRequestException(
+        'Failed to process password reset: ' + error.message
+      );
     }
   }
 
@@ -219,19 +242,21 @@ export class AuthService {
     try {
       const client = this.supabaseService.getClient();
       const { error } = await client.auth.updateUser({
-        password: newPassword,
+        password: newPassword
       });
 
       if (error) {
         throw new BadRequestException('Failed to reset password');
       }
 
-      return { 
+      return {
         message: 'Password reset successfully',
         requiresNewLogin: true
       };
     } catch (error) {
-      throw new BadRequestException('Failed to reset password: ' + error.message);
+      throw new BadRequestException(
+        'Failed to reset password: ' + error.message
+      );
     }
   }
 }

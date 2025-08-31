@@ -8,15 +8,15 @@ import { Company } from '../entities/company.entity';
 export class CompanyRepository extends BaseRepository<Company> {
   constructor(
     @InjectRepository(Company)
-    private companyRepo: Repository<Company>,
+    private companyRepo: Repository<Company>
   ) {
     super(companyRepo);
   }
 
   async findByEmail(email: string): Promise<Company | null> {
-    return await this.companyRepo.findOne({ 
+    return await this.companyRepo.findOne({
       where: { email },
-      relations: ['subscription'] 
+      relations: ['subscription']
     });
   }
 
@@ -30,21 +30,21 @@ export class CompanyRepository extends BaseRepository<Company> {
   async findWithEmployees(id: string): Promise<Company | null> {
     return await this.companyRepo.findOne({
       where: { id },
-      relations: ['employees', 'subscription'],
+      relations: ['employees', 'subscription']
     });
   }
 
   async findWithRoles(id: string): Promise<Company | null> {
     return await this.companyRepo.findOne({
       where: { id },
-      relations: ['roles', 'subscription'],
+      relations: ['roles', 'subscription']
     });
   }
 
   async findActiveCompanies(): Promise<Company[]> {
     return await this.companyRepo.find({
       where: { isActive: true },
-      relations: ['subscription'],
+      relations: ['subscription']
     });
   }
 
@@ -65,7 +65,7 @@ export class CompanyRepository extends BaseRepository<Company> {
       employeeCount: company.employees?.length || 0,
       roleCount: company.roles?.length || 0,
       maxEmployees: company.subscription?.maxEmployees || 0,
-      subscriptionPlan: company.subscription?.name || 'None',
+      subscriptionPlan: company.subscription?.name || 'None'
     };
   }
 }

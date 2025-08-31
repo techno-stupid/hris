@@ -7,12 +7,9 @@ import { EmployeesModule } from '../employees/employees.module';
 
 @Global()
 @Module({
-  imports: [
-    CompaniesModule,
-    EmployeesModule,
-  ],
+  imports: [CompaniesModule, EmployeesModule],
   controllers: [AuthController],
   providers: [AuthService, SupabaseService],
-  exports: [AuthService, SupabaseService],
+  exports: [AuthService, SupabaseService]
 })
 export class AuthModule {}

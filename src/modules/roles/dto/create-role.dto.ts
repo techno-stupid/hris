@@ -6,7 +6,9 @@ export class CreateRoleDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ example: ['view_employees', 'edit_employees', 'create_employees'] })
+  @ApiProperty({
+    example: ['view_employees', 'edit_employees', 'create_employees']
+  })
   @IsArray()
   @IsString({ each: true })
   permissions: string[];

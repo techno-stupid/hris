@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 @Injectable()
@@ -8,7 +13,7 @@ export class PermissionGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.get<string[]>(
       'permissions',
-      context.getHandler(),
+      context.getHandler()
     );
 
     if (!requiredPermissions) {
@@ -29,16 +34,16 @@ export class PermissionGuard implements CanActivate {
 
     // Check employee permissions through roles
     const employeePermissions = new Set<string>();
-    
+
     if (employee.roles) {
-      employee.roles.forEach(role => {
-        role.permissions.forEach(permission => {
+      employee.roles.forEach((role) => {
+        role.permissions.forEach((permission) => {
           employeePermissions.add(permission);
         });
       });
     }
 
-    const hasPermission = requiredPermissions.some(permission => 
+    const hasPermission = requiredPermissions.some((permission) =>
       employeePermissions.has(permission)
     );
 

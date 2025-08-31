@@ -8,37 +8,40 @@ import { Role } from '../entities/role.entity';
 export class RoleRepository extends BaseRepository<Role> {
   constructor(
     @InjectRepository(Role)
-    private roleRepo: Repository<Role>,
+    private roleRepo: Repository<Role>
   ) {
     super(roleRepo);
   }
 
   async findByCompany(companyId: string): Promise<Role[]> {
     return await this.roleRepo.find({
-      where: { company: { id: companyId } },
+      where: { company: { id: companyId } }
     });
   }
 
   async findByName(name: string, companyId: string): Promise<Role | null> {
     return await this.roleRepo.findOne({
-      where: { 
-        name, 
-        company: { id: companyId } 
-      },
+      where: {
+        name,
+        company: { id: companyId }
+      }
     });
   }
 
   async findWithEmployees(id: string, companyId: string): Promise<Role | null> {
     return await this.roleRepo.findOne({
-      where: { 
-        id, 
-        company: { id: companyId } 
+      where: {
+        id,
+        company: { id: companyId }
       },
-      relations: ['employees'],
+      relations: ['employees']
     });
   }
 
-  async findByPermission(permission: string, companyId: string): Promise<Role[]> {
+  async findByPermission(
+    permission: string,
+    companyId: string
+  ): Promise<Role[]> {
     return await this.roleRepo
       .createQueryBuilder('role')
       .where('role.companyId = :companyId', { companyId })

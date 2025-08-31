@@ -9,15 +9,10 @@ import { AuthModule } from '../../modules/auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      SubscriptionPlan,
-      Company,
-      Employee,
-      Role,
-    ]),
-    AuthModule,
+    TypeOrmModule.forFeature([SubscriptionPlan, Company, Employee, Role]),
+    AuthModule
   ],
   providers: [SeederService],
-  exports: [SeederService],
+  exports: [SeederService]
 })
 export class SeederModule {}

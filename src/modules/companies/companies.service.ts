@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException
+} from '@nestjs/common';
 import { CompanyRepository } from './repositories/company.repository';
 import { SubscriptionRepository } from '../subscriptions/repositories/subscription.repository';
 import { SupabaseService } from '../../config/supabase.config';
@@ -10,18 +14,22 @@ export class CompaniesService {
   constructor(
     private companyRepository: CompanyRepository,
     private subscriptionRepository: SubscriptionRepository,
-    private supabaseService: SupabaseService,
+    private supabaseService: SupabaseService
   ) {}
 
   async create(createCompanyDto: CreateCompanyDto) {
     // Check if company email already exists
-    const existingCompany = await this.companyRepository.findByEmail(createCompanyDto.email);
+    const existingCompany = await this.companyRepository.findByEmail(
+      createCompanyDto.email
+    );
     if (existingCompany) {
       throw new BadRequestException('Company with this email already exists');
     }
 
     // Get subscription plan
-    const subscription = await this.subscriptionRepository.findOne(createCompanyDto.subscriptionId);
+    const subscription = await this.subscriptionRepository.findOne(
+      createCompanyDto.subscriptionId
+    );
     if (!subscription || !subscription.isActive) {
       throw new BadRequestException('Invalid or inactive subscription plan');
     }
@@ -39,7 +47,7 @@ export class CompaniesService {
         name: createCompanyDto.name,
         email: createCompanyDto.email,
         supabaseUserId: supabaseUser.user.id,
-        subscription,
+        subscription
       });
 
       return {
@@ -48,8 +56,8 @@ export class CompaniesService {
         email: company.email,
         subscription: {
           name: subscription.name,
-          maxEmployees: subscription.maxEmployees,
-        },
+          maxEmployees: subscription.maxEmployees
+        }
       };
     } catch (error) {
       // Rollback Supabase user if company creation fails
@@ -60,12 +68,12 @@ export class CompaniesService {
 
   async findAll() {
     const companies = await this.companyRepository.findActiveCompanies();
-    return companies.map(company => ({
+    return companies.map((company) => ({
       id: company.id,
       name: company.name,
       email: company.email,
       subscription: company.subscription?.name,
-      createdAt: company.createdAt,
+      createdAt: company.createdAt
     }));
   }
 
@@ -92,7 +100,9 @@ export class CompaniesService {
     }
 
     if (updateCompanyDto.subscriptionId) {
-      const subscription = await this.subscriptionRepository.findOne(updateCompanyDto.subscriptionId);
+      const subscription = await this.subscriptionRepository.findOne(
+        updateCompanyDto.subscriptionId
+      );
       if (!subscription || !subscription.isActive) {
         throw new BadRequestException('Invalid or inactive subscription plan');
       }
@@ -111,10 +121,10 @@ export class CompaniesService {
 
     // Soft delete
     await this.companyRepository.softDelete(id);
-    
+
     // Optionally disable Supabase user
     await this.supabaseService.updateUser(company.supabaseUserId, {
-      banned: true,
+      banned: true
     });
 
     return { message: 'Company deleted successfully' };
