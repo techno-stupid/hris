@@ -1,38 +1,54 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Put, 
+  Delete, 
+  Body, 
+  Param, 
   UseGuards,
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../../common/guards/auth.guard';
-import { TenantGuard } from '../../common/guards/tenant.guard';
+import { CompanyContextGuard } from '../../common/guards/company-context.guard';
 import { AdminGuard } from '../../common/guards/admin.guard';
 import { EmployeesService } from '../employees/employees.service';
 import { RolesService } from '../roles/roles.service';
+import { CompaniesService } from './companies.service';
 import { CreateEmployeeDto } from '../employees/dto/create-employee.dto';
 import { UpdateEmployeeDto } from '../employees/dto/update-employee.dto';
 import { AssignRoleDto } from '../employees/dto/assign-role.dto';
 import { CreateRoleDto } from '../roles/dto/create-role.dto';
 import { UpdateRoleDto } from '../roles/dto/update-role.dto';
-import { CurrentCompany } from '../../common/decorators/current-user.decorator';
+import { CurrentCompany, CurrentCompanyId, UserRole } from '../../common/decorators/company-context.decorator';
 import { Company } from './entities/company.entity';
 
-@ApiTags('Company Administration')
+@ApiTags('Company Management')
 @ApiBearerAuth()
-@Controller('companies/:companyId')
-@UseGuards(AuthGuard, TenantGuard)
-export class CompanyAdminController {
+@Controller('company')  // Changed from 'companies/:companyId' to just 'company'
+@UseGuards(AuthGuard, CompanyContextGuard)  // CompanyContextGuard automatically sets the company
+export class CompanyController {
   constructor(
     private employeesService: EmployeesService,
-    private rolesService: RolesService
+    private rolesService: RolesService,
+    private companiesService: CompaniesService,
   ) {}
+
+  // ============ Company Info ============
+
+  @Get('profile')
+  @ApiOperation({ summary: 'Get current company profile' })
+  async getCompanyProfile(@CurrentCompany() company: Company) {
+    return this.companiesService.findOne(company.id);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Get company statistics' })
+  async getCompanyStats(@CurrentCompanyId() companyId: string) {
+    return this.companiesService.getStats(companyId);
+  }
 
   // ============ Employee Management ============
 
@@ -41,14 +57,14 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Create new employee' })
   async createEmployee(
     @Body() createEmployeeDto: CreateEmployeeDto,
-    @CurrentCompany() company: Company
+    @CurrentCompany() company: Company,
   ) {
     return this.employeesService.create(createEmployeeDto, company);
   }
 
   @Get('employees')
-  @ApiOperation({ summary: 'Get all employees' })
-  async getAllEmployees(@Param('companyId') companyId: string) {
+  @ApiOperation({ summary: 'Get all employees in the company' })
+  async getAllEmployees(@CurrentCompanyId() companyId: string) {
     return this.employeesService.findAllByCompany(companyId);
   }
 
@@ -56,7 +72,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Get employee by ID' })
   async getEmployee(
     @Param('id') id: string,
-    @Param('companyId') companyId: string
+    @CurrentCompanyId() companyId: string,
   ) {
     return this.employeesService.findOne(id, companyId);
   }
@@ -66,8 +82,8 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Update employee' })
   async updateEmployee(
     @Param('id') id: string,
-    @Param('companyId') companyId: string,
-    @Body() updateEmployeeDto: UpdateEmployeeDto
+    @CurrentCompanyId() companyId: string,
+    @Body() updateEmployeeDto: UpdateEmployeeDto,
   ) {
     return this.employeesService.update(id, companyId, updateEmployeeDto);
   }
@@ -78,7 +94,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Delete employee' })
   async deleteEmployee(
     @Param('id') id: string,
-    @Param('companyId') companyId: string
+    @CurrentCompanyId() companyId: string,
   ) {
     return this.employeesService.delete(id, companyId);
   }
@@ -88,14 +104,10 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Assign role to employee' })
   async assignRole(
     @Param('employeeId') employeeId: string,
-    @Param('companyId') companyId: string,
-    @Body() assignRoleDto: AssignRoleDto
+    @CurrentCompanyId() companyId: string,
+    @Body() assignRoleDto: AssignRoleDto,
   ) {
-    return this.employeesService.assignRole(
-      employeeId,
-      assignRoleDto,
-      companyId
-    );
+    return this.employeesService.assignRole(employeeId, assignRoleDto, companyId);
   }
 
   @Delete('employees/:employeeId/roles/:roleId')
@@ -105,7 +117,7 @@ export class CompanyAdminController {
   async removeRole(
     @Param('employeeId') employeeId: string,
     @Param('roleId') roleId: string,
-    @Param('companyId') companyId: string
+    @CurrentCompanyId() companyId: string,
   ) {
     return this.employeesService.removeRole(employeeId, roleId, companyId);
   }
@@ -117,14 +129,14 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Create new role' })
   async createRole(
     @Body() createRoleDto: CreateRoleDto,
-    @CurrentCompany() company: Company
+    @CurrentCompany() company: Company,
   ) {
     return this.rolesService.create(createRoleDto, company);
   }
 
   @Get('roles')
-  @ApiOperation({ summary: 'Get all roles' })
-  async getAllRoles(@Param('companyId') companyId: string) {
+  @ApiOperation({ summary: 'Get all roles in the company' })
+  async getAllRoles(@CurrentCompanyId() companyId: string) {
     return this.rolesService.findAllByCompany(companyId);
   }
 
@@ -138,7 +150,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Get role by ID' })
   async getRole(
     @Param('id') id: string,
-    @Param('companyId') companyId: string
+    @CurrentCompanyId() companyId: string,
   ) {
     return this.rolesService.findOne(id, companyId);
   }
@@ -147,7 +159,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Get employees with this role' })
   async getRoleEmployees(
     @Param('id') id: string,
-    @Param('companyId') companyId: string
+    @CurrentCompanyId() companyId: string,
   ) {
     return this.rolesService.findWithEmployees(id, companyId);
   }
@@ -157,8 +169,8 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Update role' })
   async updateRole(
     @Param('id') id: string,
-    @Param('companyId') companyId: string,
-    @Body() updateRoleDto: UpdateRoleDto
+    @CurrentCompanyId() companyId: string,
+    @Body() updateRoleDto: UpdateRoleDto,
   ) {
     return this.rolesService.update(id, companyId, updateRoleDto);
   }
@@ -169,7 +181,7 @@ export class CompanyAdminController {
   @ApiOperation({ summary: 'Delete role' })
   async deleteRole(
     @Param('id') id: string,
-    @Param('companyId') companyId: string
+    @CurrentCompanyId() companyId: string,
   ) {
     return this.rolesService.delete(id, companyId);
   }

@@ -10,7 +10,11 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "format": "prettier --write .",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "db:clear": "npx ts-node src/database/clear-db.ts",
+    "db:clear:selective": "npx ts-node src/database/clear-selective.ts",
+    "db:seed": "npx ts-node src/database/seed.ts",
+    "db:reset": "npm run db:clear && npm run start:dev"
   },
   "lint-staged": {
     "*.{js,ts}": [
