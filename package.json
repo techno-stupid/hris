@@ -2,6 +2,7 @@
   "name": "hris-saas",
   "version": "1.0.0",
   "description": "Human Resource Information System SaaS",
+  "license": "UNLICENSED",
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -14,7 +15,8 @@
     "db:clear": "npx ts-node src/database/clear-db.ts",
     "db:clear:selective": "npx ts-node src/database/clear-selective.ts",
     "db:seed": "npx ts-node src/database/seed.ts",
-    "db:reset": "npm run db:clear && npm run start:dev"
+    "db:reset": "yarn db:clear && yarn start:dev",
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,ts}": [

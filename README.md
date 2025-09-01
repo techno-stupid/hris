@@ -39,40 +39,34 @@ git clone https://github.com/techno-stupid/hris
 cd <project-folder-name>
 ```
 
-### 3. Set up Husky hooks
-
-```bash
-chmod +x ./.husky/commit-msg && chmod +x ./.husky/pre-commit
-```
-
-### 4. Configure environment variables
-
-```bash
-cp .env.example .env
-```
-
-### 5. Install dependencies
+### 3. Install dependencies
 
 ```bash
 yarn install
 ```
 
-### 6. Start the development server
+### 4. Set up Husky hooks
+
+```bash
+yarn prepare
+```
+
+### 5. Make hook files executable
+
+```bash
+chmod +x ./.husky/commit-msg && chmod +x ./.husky/pre-commit
+```
+
+### 6. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+### 7. Start the development server
 
 ```bash
 yarn start:dev
-```
-
-## Alternative Setup with npm
-
-If you prefer using npm instead of yarn:
-
-```bash
-# Install dependencies
-$ npm install
-
-# Start development server
-$ npm run start:dev
 ```
 
 ## Compile and run the project
@@ -120,7 +114,7 @@ When you're ready to deploy your NestJS application to production, there are som
 If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
 ```bash
-$ npm install -g @nestjs/mau
+$ yarn add -g @nestjs/mau
 $ mau deploy
 ```
 
