@@ -10,7 +10,7 @@ dotenv.config();
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout,
+  output: process.stdout
 });
 
 const question = (query: string): Promise<string> => {
@@ -27,7 +27,7 @@ const AppDataSource = new DataSource({
   password: process.env.DATABASE_PASSWORD || '',
   database: process.env.DATABASE_NAME || 'hris_saas',
   synchronize: false,
-  logging: false,
+  logging: false
 });
 
 async function listSupabaseUsers() {
@@ -42,12 +42,15 @@ async function listSupabaseUsers() {
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
-      persistSession: false,
-    },
+      persistSession: false
+    }
   });
 
-  const { data: { users }, error } = await supabase.auth.admin.listUsers();
-  
+  const {
+    data: { users },
+    error
+  } = await supabase.auth.admin.listUsers();
+
   if (error) {
     console.error('Error listing users:', error.message);
     return [];
@@ -67,18 +70,21 @@ async function deleteSupabaseUser(email: string) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
-      persistSession: false,
-    },
+      persistSession: false
+    }
   });
 
   // Find user by email
-  const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-  
+  const {
+    data: { users },
+    error: listError
+  } = await supabase.auth.admin.listUsers();
+
   if (listError || !users) {
     return false;
   }
 
-  const user = users.find(u => u.email === email);
+  const user = users.find((u) => u.email === email);
   if (!user) {
     console.log(`User ${email} not found in Supabase`);
     return false;
@@ -86,7 +92,7 @@ async function deleteSupabaseUser(email: string) {
 
   // Delete the user
   const { error } = await supabase.auth.admin.deleteUser(user.id);
-  
+
   if (error) {
     console.error(`Failed to delete ${email}:`, error.message);
     return false;
@@ -97,7 +103,7 @@ async function deleteSupabaseUser(email: string) {
 
 async function clearAllSupabaseUsers() {
   const users = await listSupabaseUsers();
-  
+
   if (users.length === 0) {
     console.log('No users to delete');
     return;
@@ -113,7 +119,7 @@ async function clearAllSupabaseUsers() {
 
 async function clearSpecificCompany() {
   await AppDataSource.initialize();
-  
+
   // List all companies
   const companies = await AppDataSource.query(`
     SELECT id, name, email FROM companies
@@ -129,7 +135,9 @@ async function clearSpecificCompany() {
     console.log(`  ${i + 1}. ${c.name} (${c.email})`);
   });
 
-  const choice = await question('\nEnter company number to delete (or 0 to cancel): ');
+  const choice = await question(
+    '\nEnter company number to delete (or 0 to cancel): '
+  );
   const index = parseInt(choice) - 1;
 
   if (index < 0 || index >= companies.length) {
@@ -138,33 +146,44 @@ async function clearSpecificCompany() {
   }
 
   const company = companies[index];
-  
+
   console.log(`\nDeleting company: ${company.name}`);
 
   // Get all employees of this company
-  const employees = await AppDataSource.query(`
+  const employees = await AppDataSource.query(
+    `
     SELECT email FROM employees WHERE "companyId" = $1
-  `, [company.id]);
+  `,
+    [company.id]
+  );
 
   // Delete from database
-  await AppDataSource.query(`DELETE FROM employees WHERE "companyId" = $1`, [company.id]);
-  await AppDataSource.query(`DELETE FROM roles WHERE "companyId" = $1`, [company.id]);
-  await AppDataSource.query(`DELETE FROM companies WHERE id = $1`, [company.id]);
+  await AppDataSource.query(`DELETE FROM employees WHERE "companyId" = $1`, [
+    company.id
+  ]);
+  await AppDataSource.query(`DELETE FROM roles WHERE "companyId" = $1`, [
+    company.id
+  ]);
+  await AppDataSource.query(`DELETE FROM companies WHERE id = $1`, [
+    company.id
+  ]);
 
   console.log('✅ Deleted from database');
 
   // Delete from Supabase
-  const deleteFromSupabase = await question('Delete users from Supabase Auth too? (yes/no): ');
-  
+  const deleteFromSupabase = await question(
+    'Delete users from Supabase Auth too? (yes/no): '
+  );
+
   if (deleteFromSupabase.toLowerCase() === 'yes') {
     // Delete company admin
     await deleteSupabaseUser(company.email);
-    
+
     // Delete employees
     for (const emp of employees) {
       await deleteSupabaseUser(emp.email);
     }
-    
+
     console.log('✅ Deleted from Supabase Auth');
   }
 }
@@ -172,7 +191,7 @@ async function clearSpecificCompany() {
 async function main() {
   console.log('🧹 HRIS SaaS - Database Cleanup Tool');
   console.log('=====================================\n');
-  
+
   console.log('What would you like to do?');
   console.log('  1. Clear EVERYTHING (Database + All Supabase Users)');
   console.log('  2. Clear Database Tables Only');
@@ -186,7 +205,9 @@ async function main() {
   switch (choice) {
     case '1':
       // Clear everything
-      const confirmAll = await question('\n⚠️  Delete ALL data and users? (yes/no): ');
+      const confirmAll = await question(
+        '\n⚠️  Delete ALL data and users? (yes/no): '
+      );
       if (confirmAll.toLowerCase() === 'yes') {
         await AppDataSource.initialize();
         await AppDataSource.query(`
@@ -197,7 +218,7 @@ async function main() {
           DROP TABLE IF EXISTS subscription_plans CASCADE;
         `);
         console.log('✅ Database cleared');
-        
+
         await clearAllSupabaseUsers();
         console.log('✅ Supabase users cleared');
       }
@@ -205,7 +226,9 @@ async function main() {
 
     case '2':
       // Clear database only
-      const confirmDb = await question('\n⚠️  Delete all database tables? (yes/no): ');
+      const confirmDb = await question(
+        '\n⚠️  Delete all database tables? (yes/no): '
+      );
       if (confirmDb.toLowerCase() === 'yes') {
         await AppDataSource.initialize();
         await AppDataSource.query(`
@@ -221,7 +244,9 @@ async function main() {
 
     case '3':
       // Clear Supabase only
-      const confirmSupabase = await question('\n⚠️  Delete all Supabase users? (yes/no): ');
+      const confirmSupabase = await question(
+        '\n⚠️  Delete all Supabase users? (yes/no): '
+      );
       if (confirmSupabase.toLowerCase() === 'yes') {
         await clearAllSupabaseUsers();
         console.log('✅ Supabase users cleared');
@@ -237,7 +262,7 @@ async function main() {
       // List Supabase users
       const users = await listSupabaseUsers();
       console.log(`\nFound ${users.length} Supabase users:`);
-      users.forEach(u => {
+      users.forEach((u) => {
         console.log(`  - ${u.email} (ID: ${u.id})`);
       });
       break;
@@ -253,7 +278,7 @@ async function main() {
   if (AppDataSource.isInitialized) {
     await AppDataSource.destroy();
   }
-  
+
   rl.close();
   process.exit(0);
 }

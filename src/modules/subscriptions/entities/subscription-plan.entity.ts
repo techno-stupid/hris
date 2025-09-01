@@ -22,6 +22,9 @@ export class SubscriptionPlan {
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
+  @Column('int', { default: 1 })
+  durationMonths: number; //Subscription duration in months
+
   @Column({ type: 'text', nullable: true })
   description: string;
 

@@ -30,6 +30,12 @@ export class Company {
   @JoinColumn()
   subscription: SubscriptionPlan;
 
+  @Column({ type: 'timestamp', nullable: true })
+  subscriptionStartDate: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  subscriptionEndDate: Date;
+
   @Column({ default: true })
   isActive: boolean;
 
@@ -44,4 +50,10 @@ export class Company {
 
   @OneToMany(() => Role, (role) => role.company, { cascade: true })
   roles: Role[];
+
+  // Helper method to check if subscription is valid
+  isSubscriptionValid(): boolean {
+    if (!this.subscriptionEndDate) return true; // No end date means lifetime
+    return new Date() <= new Date(this.subscriptionEndDate);
+  }
 }

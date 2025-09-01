@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException
+} from '@nestjs/common';
 import { CompanyRepository } from '../../modules/companies/repositories/company.repository';
 import { EmployeeRepository } from '../../modules/employees/repositories/employee.repository';
 import { ConfigService } from '@nestjs/config';
@@ -9,7 +14,7 @@ export class CompanyContextGuard implements CanActivate {
   constructor(
     private companyRepository: CompanyRepository,
     private employeeRepository: EmployeeRepository,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -21,12 +26,17 @@ export class CompanyContextGuard implements CanActivate {
     }
 
     // Check if user is a super admin
-    const superAdminEmails = this.configService.get<string>('SUPER_ADMIN_EMAILS', '').split(',').map(e => e.trim());
+    const superAdminEmails = this.configService
+      .get<string>('SUPER_ADMIN_EMAILS', '')
+      .split(',')
+      .map((e) => e.trim());
     if (user.email && superAdminEmails.includes(user.email)) {
       request.userRole = 'super_admin';
       request.isSuperAdmin = true;
       // Super admin doesn't have a default company
-      throw new ForbiddenException('Super admin is not associated with any company');
+      throw new ForbiddenException(
+        'Super admin is not associated with any company'
+      );
     }
 
     // Check if user is a company admin
@@ -42,7 +52,7 @@ export class CompanyContextGuard implements CanActivate {
 
     // Check if user is an employee
     let employee: Employee | null = null;
-    
+
     if (user.email) {
       employee = await this.employeeRepository.findByEmail(user.email);
     }

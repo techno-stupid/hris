@@ -42,12 +42,19 @@ export class CompaniesService {
     );
 
     try {
-      // Create company
+      // Calculate subscription dates
+      const now = new Date();
+      const endDate = new Date(now);
+      endDate.setMonth(endDate.getMonth() + subscription.durationMonths);
+
+      // Create company with subscription dates
       const company = await this.companyRepository.create({
         name: createCompanyDto.name,
         email: createCompanyDto.email,
         supabaseUserId: supabaseUser.user.id,
-        subscription
+        subscription,
+        subscriptionStartDate: now,
+        subscriptionEndDate: endDate
       });
 
       return {
@@ -56,7 +63,8 @@ export class CompaniesService {
         email: company.email,
         subscription: {
           name: subscription.name,
-          maxEmployees: subscription.maxEmployees
+          maxEmployees: subscription.maxEmployees,
+          validUntil: endDate
         }
       };
     } catch (error) {
@@ -66,6 +74,84 @@ export class CompaniesService {
     }
   }
 
+  async renewSubscription(companyId: string, months?: number) {
+    const company = await this.companyRepository.findOne(companyId);
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    const renewalMonths = months || company.subscription.durationMonths || 1;
+
+    // If subscription hasn't expired, add to existing end date
+    // Otherwise, start from today
+    const startDate =
+      company.subscriptionEndDate && company.isSubscriptionValid()
+        ? new Date(company.subscriptionEndDate)
+        : new Date();
+
+    const newEndDate = new Date(startDate);
+    newEndDate.setMonth(newEndDate.getMonth() + renewalMonths);
+
+    await this.companyRepository.update(companyId, {
+      subscriptionEndDate: newEndDate,
+      subscriptionStartDate: company.subscriptionStartDate || new Date()
+    });
+
+    return {
+      message: 'Subscription renewed successfully',
+      newExpiryDate: newEndDate
+    };
+  }
+
+  async changeSubscriptionPlan(
+    companyId: string,
+    subscriptionId: string,
+    startDate: Date,
+    endDate: Date
+  ) {
+    const subscription =
+      await this.subscriptionRepository.findOne(subscriptionId);
+    if (!subscription) {
+      throw new NotFoundException('Subscription plan not found');
+    }
+
+    await this.companyRepository.update(companyId, {
+      subscription,
+      subscriptionStartDate: startDate,
+      subscriptionEndDate: endDate
+    });
+
+    const updated = await this.companyRepository.findOne(companyId);
+    return updated;
+  }
+
+  async findExpiringCompanies(days: number = 30) {
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + days);
+
+    // Get all companies with their subscription info
+    const companies = await this.companyRepository.findActiveCompanies();
+
+    return companies
+      .filter((company) => {
+        if (!company.subscriptionEndDate) return false;
+        const endDate = new Date(company.subscriptionEndDate);
+        return endDate <= expiryDate && endDate >= new Date();
+      })
+      .map((company) => ({
+        id: company.id,
+        name: company.name,
+        email: company.email,
+        subscriptionPlan: company.subscription?.name,
+        subscriptionEndDate: company.subscriptionEndDate,
+        daysRemaining: Math.floor(
+          (new Date(company.subscriptionEndDate).getTime() -
+            new Date().getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+      }));
+  }
+
   async findAll() {
     const companies = await this.companyRepository.findActiveCompanies();
     return companies.map((company) => ({
@@ -73,6 +159,9 @@ export class CompaniesService {
       name: company.name,
       email: company.email,
       subscription: company.subscription?.name,
+      subscriptionStartDate: company.subscriptionStartDate,
+      subscriptionEndDate: company.subscriptionEndDate,
+      isSubscriptionValid: company.isSubscriptionValid(),
       createdAt: company.createdAt
     }));
   }

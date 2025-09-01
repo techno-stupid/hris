@@ -13,10 +13,10 @@ import { RolesModule } from '../roles/roles.module';
     TypeOrmModule.forFeature([Company]),
     SubscriptionsModule,
     forwardRef(() => EmployeesModule),
-    forwardRef(() => RolesModule),
+    forwardRef(() => RolesModule)
   ],
-  controllers: [CompanyController],  // Use the refactored controller
+  controllers: [CompanyController], // Use the refactored controller
   providers: [CompaniesService, CompanyRepository],
-  exports: [CompaniesService, CompanyRepository],
+  exports: [CompaniesService, CompanyRepository]
 })
 export class CompaniesModule {}

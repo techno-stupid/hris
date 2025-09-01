@@ -7,7 +7,7 @@ dotenv.config();
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout,
+  output: process.stdout
 });
 
 const question = (query: string): Promise<string> => {
@@ -24,7 +24,7 @@ const AppDataSource = new DataSource({
   password: process.env.DATABASE_PASSWORD || '',
   database: process.env.DATABASE_NAME || 'hris_saas',
   synchronize: false,
-  logging: true,
+  logging: true
 });
 
 async function clearSupabaseUsers() {
@@ -37,18 +37,21 @@ async function clearSupabaseUsers() {
   }
 
   console.log('\n📋 Clearing Supabase Auth Users...');
-  
+
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
-        persistSession: false,
-      },
+        persistSession: false
+      }
     });
 
     // List all users
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-    
+    const {
+      data: { users },
+      error: listError
+    } = await supabase.auth.admin.listUsers();
+
     if (listError) {
       console.error('❌ Error listing users:', listError.message);
       return;
@@ -78,9 +81,12 @@ async function clearSupabaseUsers() {
     for (const user of users) {
       try {
         const { error } = await supabase.auth.admin.deleteUser(user.id);
-        
+
         if (error) {
-          console.error(`❌ Failed to delete user ${user.email}:`, error.message);
+          console.error(
+            `❌ Failed to delete user ${user.email}:`,
+            error.message
+          );
           failedCount++;
         } else {
           console.log(`✅ Deleted user: ${user.email}`);
@@ -95,7 +101,6 @@ async function clearSupabaseUsers() {
     console.log(`\n📊 Supabase Users Summary:`);
     console.log(`   ✅ Deleted: ${deletedCount}`);
     console.log(`   ❌ Failed: ${failedCount}`);
-
   } catch (error) {
     console.error('❌ Error clearing Supabase users:', error);
   }
@@ -130,7 +135,6 @@ async function clearDatabase() {
     }
 
     console.log('✅ All database tables cleared successfully!');
-
   } catch (error) {
     console.error('❌ Error clearing database:', error);
   } finally {
@@ -143,14 +147,16 @@ async function clearDatabase() {
 async function main() {
   console.log('🧹 HRIS SaaS - Complete Database & Auth Clear Script');
   console.log('====================================================\n');
-  
+
   console.log('⚠️  WARNING: This script will:');
   console.log('   1. Delete ALL tables from your database');
   console.log('   2. Delete ALL users from Supabase Auth');
   console.log('   This action cannot be undone!\n');
 
-  const confirm = await question('Are you sure you want to continue? (yes/no): ');
-  
+  const confirm = await question(
+    'Are you sure you want to continue? (yes/no): '
+  );
+
   if (confirm.toLowerCase() !== 'yes') {
     console.log('❌ Operation cancelled');
     rl.close();
@@ -160,7 +166,7 @@ async function main() {
   try {
     // Clear database tables first
     await clearDatabase();
-    
+
     // Then clear Supabase users
     await clearSupabaseUsers();
 
@@ -169,7 +175,6 @@ async function main() {
     console.log('   1. Make sure SEED_DATABASE=true in your .env file');
     console.log('   2. Run: npm run start:dev');
     console.log('   3. The seeder will create fresh demo data\n');
-
   } catch (error) {
     console.error('❌ Error during cleanup:', error);
   } finally {

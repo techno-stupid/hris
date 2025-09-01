@@ -9,7 +9,8 @@ import {
   UseGuards,
   Query,
   HttpCode,
-  HttpStatus
+  HttpStatus,
+  NotFoundException
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -121,5 +122,61 @@ export class SuperAdminController {
   @ApiOperation({ summary: 'Deactivate subscription plan' })
   async deleteSubscription(@Param('id') id: string) {
     return this.subscriptionsService.delete(id);
+  }
+
+  @Put('companies/:id/renew-subscription')
+  @ApiOperation({ summary: 'Renew company subscription' })
+  async renewCompanySubscription(
+    @Param('id') id: string,
+    @Body() renewDto: { months?: number }
+  ) {
+    return this.companiesService.renewSubscription(id, renewDto.months);
+  }
+
+  @Put('companies/:id/change-plan')
+  @ApiOperation({ summary: 'Change company subscription plan' })
+  async changeSubscriptionPlan(
+    @Param('id') companyId: string,
+    @Body() changePlanDto: { subscriptionId: string }
+  ) {
+    const company = await this.companiesService.findOne(companyId);
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    const newPlan = await this.subscriptionsService.findOne(
+      changePlanDto.subscriptionId
+    );
+    if (!newPlan || !newPlan.isActive) {
+      throw new NotFoundException('Subscription plan not found or inactive');
+    }
+
+    // Calculate new end date based on new plan duration
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + (newPlan.durationMonths || 1));
+
+    // Update company with new subscription
+    const updatedCompany = await this.companiesService.changeSubscriptionPlan(
+      companyId,
+      changePlanDto.subscriptionId,
+      startDate,
+      endDate
+    );
+
+    return {
+      message: 'Subscription plan changed successfully',
+      newPlan: newPlan.name,
+      validUntil: endDate
+    };
+  }
+
+  @Get('companies/expiring-soon')
+  @ApiOperation({ summary: 'Get companies with expiring subscriptions' })
+  async getExpiringCompanies(@Query('days') days: string = '30') {
+    const daysNum = parseInt(days, 10);
+    const companies =
+      await this.companiesService.findExpiringCompanies(daysNum);
+    return companies;
   }
 }

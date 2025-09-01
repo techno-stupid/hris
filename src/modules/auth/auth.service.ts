@@ -30,11 +30,36 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      // Get user context - pass email with null check
-      const userContext = await this.getUserContext(
+      // Get user context
+      const userContext: any = await this.getUserContext(
         data.user.id,
         data.user.email || loginDto.email
       );
+
+      // Check subscription validity for company users
+      if (
+        userContext.companyId &&
+        (userContext.type === 'company_admin' ||
+          userContext.type === 'employee_admin' ||
+          userContext.type === 'employee')
+      ) {
+        const company = await this.companyRepository.findOne(
+          userContext.companyId
+        );
+
+        if (company && !company.isSubscriptionValid()) {
+          throw new UnauthorizedException(
+            'Your company subscription has expired. Please contact support to renew.'
+          );
+        }
+
+        // Add subscription status to response
+        userContext.subscriptionStatus = {
+          isValid: company?.isSubscriptionValid() || false,
+          expiresAt: company?.subscriptionEndDate,
+          planName: company?.subscription?.name
+        };
+      }
 
       return {
         accessToken: data.session.access_token,

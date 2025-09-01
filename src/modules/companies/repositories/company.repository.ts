@@ -68,4 +68,21 @@ export class CompanyRepository extends BaseRepository<Company> {
       subscriptionPlan: company.subscription?.name || 'None'
     };
   }
+
+  async update(id: string, data: any): Promise<Company | null> {
+    // If updating subscription by ID, load the entity first
+    if (data.subscriptionId) {
+      const subscription = await this.companyRepo.manager.findOne(
+        'SubscriptionPlan',
+        { where: { id: data.subscriptionId } }
+      );
+      if (subscription) {
+        data.subscription = subscription;
+        delete data.subscriptionId;
+      }
+    }
+
+    await this.companyRepo.update(id, data);
+    return await this.findOne(id);
+  }
 }

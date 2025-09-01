@@ -162,25 +162,30 @@ export class SeederService implements OnModuleInit {
         name: 'Starter',
         maxEmployees: 10,
         price: 49.99,
-        description: 'Perfect for small startups and teams'
+        durationMonths: 1, // Monthly
+        description: 'Perfect for small startups and teams - Monthly billing'
       },
       {
         name: 'Standard',
         maxEmployees: 50,
         price: 149.99,
-        description: 'Great for growing businesses'
+        durationMonths: 3, // Quarterly
+        description: 'Great for growing businesses - Quarterly billing'
       },
       {
         name: 'Professional',
         maxEmployees: 200,
         price: 399.99,
-        description: 'For established companies'
+        durationMonths: 6, // Semi-annual
+        description: 'For established companies - 6 month billing'
       },
       {
         name: 'Enterprise',
         maxEmployees: 1000,
         price: 999.99,
-        description: 'Unlimited features for large organizations'
+        durationMonths: 12, // Annual
+        description:
+          'Unlimited features for large organizations - Annual billing'
       }
     ];
 
@@ -199,7 +204,6 @@ export class SeederService implements OnModuleInit {
     const email = 'admin@demo-company.com';
     const password = 'Demo@123456';
 
-    // Create Supabase user if configured
     let supabaseUserId = `demo-admin-${Date.now()}`;
 
     if (this.supabaseService.isSupabaseConfigured()) {
@@ -215,17 +219,23 @@ export class SeederService implements OnModuleInit {
       }
     }
 
+    // Calculate subscription dates
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + subscription.durationMonths);
+
     const company = this.companyRepo.create({
       name: 'Demo Company',
       email,
       supabaseUserId,
       subscription,
+      subscriptionStartDate: startDate,
+      subscriptionEndDate: endDate,
       isActive: true
     });
 
     return await this.companyRepo.save(company);
   }
-
   private async createDefaultRoles(company: Company): Promise<Role[]> {
     const rolesData = [
       {

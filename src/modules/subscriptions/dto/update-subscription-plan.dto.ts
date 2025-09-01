@@ -25,6 +25,12 @@ export class UpdateSubscriptionPlanDto {
   @IsOptional()
   price?: number;
 
+  @ApiPropertyOptional({ description: 'Subscription duration in months' })
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  durationMonths?: number;
+
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
